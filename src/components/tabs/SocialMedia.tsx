@@ -118,13 +118,13 @@ const SocialMedia = () => {
   const InstagramSection = () => {
     const igData = instagramData as unknown as InstagramDataRow[];
     
-    // Calculate improved metrics
-    const totalEngagement = igData.reduce((sum, row) => sum + (row.engagement_total || 0), 0);
-    const totalLikes = igData.reduce((sum, row) => sum + (row.likes || 0), 0);
-    const totalComments = igData.reduce((sum, row) => sum + (row.comments || 0), 0);
-    const totalImpressions = igData.reduce((sum, row) => sum + (row.estimated_impressions || 0), 0);
+    // Calculate improved metrics with proper number parsing
+    const totalEngagement = igData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
+    const totalLikes = igData.reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
+    const totalComments = igData.reduce((sum, row) => sum + (Number(row.comments) || 0), 0);
+    const totalImpressions = igData.reduce((sum, row) => sum + (Number(row.estimated_impressions) || 0), 0);
     const avgEngagementRate = igData.length > 0 
-      ? igData.reduce((sum, row) => sum + (row.engagement_rate_by_follower || 0), 0) / igData.length 
+      ? igData.reduce((sum, row) => sum + (Number(row.engagement_rate_by_follower) || 0), 0) / igData.length 
       : 0;
     const uniqueCompanies = new Set(igData.map(row => row.company)).size;
 
@@ -272,14 +272,14 @@ const SocialMedia = () => {
   const TikTokSection = () => {
     const ttData = tiktokData as unknown as TikTokDataRow[];
     
-    // Calculate improved metrics
-    const totalEngagement = ttData.reduce((sum, row) => sum + (row.engagement_total || 0), 0);
-    const totalViews = ttData.reduce((sum, row) => sum + (row.views || 0), 0);
-    const totalLikes = ttData.reduce((sum, row) => sum + (row.likes || 0), 0);
-    const totalComments = ttData.reduce((sum, row) => sum + (row.comments || 0), 0);
-    const totalShares = ttData.reduce((sum, row) => sum + (row.shares || 0), 0);
+    // Calculate improved metrics with proper number parsing
+    const totalEngagement = ttData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
+    const totalViews = ttData.reduce((sum, row) => sum + (Number(row.views) || 0), 0);
+    const totalLikes = ttData.reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
+    const totalComments = ttData.reduce((sum, row) => sum + (Number(row.comments) || 0), 0);
+    const totalShares = ttData.reduce((sum, row) => sum + (Number(row.shares) || 0), 0);
     const avgEngagementRate = ttData.length > 0 
-      ? ttData.reduce((sum, row) => sum + (row.engagement_rate_by_view || 0), 0) / ttData.length 
+      ? ttData.reduce((sum, row) => sum + (Number(row.engagement_rate_by_view) || 0), 0) / ttData.length 
       : 0;
     const uniqueCompanies = new Set(ttData.map(row => row.company)).size;
 
