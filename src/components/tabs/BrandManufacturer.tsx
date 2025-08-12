@@ -3,6 +3,7 @@ import FilterBar from "../dashboard/FilterBar";
 import SpendImpressionsByBrand from "../dashboard/SpendImpressionsByBrand";
 import GeneralFigures from "../dashboard/GeneralFigures";
 import Timeline from "../dashboard/Timeline";
+import ConsolidatedInvestmentDistribution from "../dashboard/ConsolidatedInvestmentDistribution";
 
 interface DataRow {
   "month-year": string;
@@ -67,6 +68,9 @@ const BrandManufacturer = ({ data }: BrandManufacturerProps) => {
         data={filteredData} 
         title="Brand"
       />
+
+      {/* Investment Distribution Analysis */}
+      <ConsolidatedInvestmentDistribution data={filteredData} />
     </div>
   );
 };
