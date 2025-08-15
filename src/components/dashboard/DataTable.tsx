@@ -26,12 +26,19 @@ const DataTable = ({ title, data, columns, className = "" }: DataTableProps) => 
           }
           return value.toLocaleString();
         case 'percentage':
-          return `${value.toFixed(1)}%`;
+          if (value === 0) return "-";
+          const sign = value > 0 ? "+" : "";
+          return `${sign}${value.toFixed(1)}%`;
         default:
           return value.toLocaleString();
       }
     }
     return value;
+  };
+
+  const getYoYColor = (value: number) => {
+    if (value === 0) return "text-gray-500";
+    return value > 0 ? "text-green-600" : "text-red-500";
   };
 
   const getGradientStyle = (value: number, max: number, type: 'green' | 'blue') => {
@@ -83,6 +90,10 @@ const DataTable = ({ title, data, columns, className = "" }: DataTableProps) => 
                       key={column.key} 
                       className={`font-medium min-w-32 px-4 ${
                         colIndex === 0 ? 'text-blue-800 bg-blue-50 sticky left-0 z-10' : ''
+                      } ${
+                        column.type === 'percentage' && column.key.includes('YoY') && typeof row[column.key] === 'number'
+                          ? getYoYColor(row[column.key] as number)
+                          : ''
                       }`}
                       style={
                         column.key === '% Spend' && typeof row[column.key] === 'number' 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,22 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Close dropdown on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (open) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      window.addEventListener('scroll', handleScroll, true);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+      };
+    }
+  }, [open]);
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
@@ -78,7 +94,11 @@ export function MultiSelect({
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0 bg-white border-border rounded-xl" align="start">
+        <PopoverContent 
+          className="w-full p-0 bg-white border-border rounded-xl z-[9999]" 
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <div className="flex items-center border-b border-border px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <Input

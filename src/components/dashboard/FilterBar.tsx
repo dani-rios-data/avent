@@ -33,7 +33,7 @@ const FilterBar = ({
 
 
   return (
-    <Card className="bg-warm-cream border-border shadow-soft rounded-2xl p-4 sticky top-0 z-10">
+    <Card className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
       <div className="flex flex-wrap gap-4 items-start">
         <div className="flex flex-col gap-1 min-w-[200px]">
           <label className="text-xs font-medium text-foreground">Year</label>

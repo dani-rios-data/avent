@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SimpleSelect } from "@/components/ui/simple-select";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber } from "@/lib/utils";
 
@@ -47,9 +47,9 @@ const CHART_COLORS = [
 const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDistributionProps) => {
   const [activeTab, setActiveTab] = useState("channels");
   const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [leftChartBrands, setLeftChartBrands] = useState<string[]>([]);
-  const [rightChartBrands, setRightChartBrands] = useState<string[]>([]);
-  const [publishersSelectedBrands, setPublishersSelectedBrands] = useState<string[]>([]);
+  const [leftChartBrand, setLeftChartBrand] = useState<string>("all");
+  const [rightChartBrand, setRightChartBrand] = useState<string>("");
+  const [publishersSelectedBrand, setPublishersSelectedBrand] = useState<string>("all");
 
   // Get unique years for selection
   const uniqueYears = useMemo(() => {
@@ -70,27 +70,29 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
   }, [yearFilteredData]);
 
   // Initialize defaults: All Brands vs Avent
-  useMemo(() => {
-    if (leftChartBrands.length === 0) {
-      setLeftChartBrands(uniqueBrands); // All brands by default
+  useEffect(() => {
+    if (uniqueBrands.length > 0) {
+      if (leftChartBrand === "") {
+        setLeftChartBrand("all"); // All brands by default
+      }
+      if (rightChartBrand === "") {
+        const aventBrands = uniqueBrands.filter(brand => 
+          brand.toLowerCase().includes("avent")
+        );
+        setRightChartBrand(aventBrands.length > 0 ? aventBrands[0] : uniqueBrands[0] || "all");
+      }
+      if (publishersSelectedBrand === "") {
+        setPublishersSelectedBrand("all"); // All brands by default for publishers
+      }
     }
-    if (rightChartBrands.length === 0) {
-      const aventBrands = uniqueBrands.filter(brand => 
-        brand.toLowerCase().includes("avent")
-      );
-      setRightChartBrands(aventBrands.length > 0 ? aventBrands : [uniqueBrands[0] || ""]);
-    }
-    if (publishersSelectedBrands.length === 0) {
-      setPublishersSelectedBrands(uniqueBrands); // All brands by default for publishers
-    }
-  }, [uniqueBrands, leftChartBrands, rightChartBrands, publishersSelectedBrands]);
+  }, [uniqueBrands.join(',')]);
 
 
   // Calculate publishers spend data for selected brands
   const publishersSpendData = useMemo(() => {
-    const filteredData = publishersSelectedBrands.length === uniqueBrands.length 
+    const filteredData = publishersSelectedBrand === "all" 
       ? yearFilteredData 
-      : yearFilteredData.filter(row => publishersSelectedBrands.includes(row["brand root"]));
+      : yearFilteredData.filter(row => row["brand root"] === publishersSelectedBrand);
 
     const publisherSpends = filteredData.reduce((acc, row) => {
       const publisher = row.publisher;
@@ -107,32 +109,65 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         originalSpend: spend
       }))
       .sort((a, b) => b.spend - a.spend); // Sort by spend descending
-  }, [yearFilteredData, publishersSelectedBrands, uniqueBrands]);
+  }, [yearFilteredData, publishersSelectedBrand]);
 
 
-  const CustomDonutTooltip = ({ active, payload }: any) => {
+  const CustomDonutTooltip = useCallback(({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const originalValue = data.value * 1000000; // Convert back to original USD value
+      
       return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-800">{data.name}</p>
-          <p className="text-sm text-blue-600">
-            {`Spend: $${formatNumber(data.value)}M`}
-          </p>
-          <p className="text-sm text-gray-600">
-            {`${data.percentage.toFixed(1)}% of total`}
-          </p>
+        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-xl min-w-[200px]">
+          <div className="border-b border-gray-100 pb-2 mb-2">
+            <p className="font-semibold text-gray-900 text-sm">{data.name}</p>
+          </div>
+          
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-600">Spend:</span>
+              <span className="text-sm font-bold text-blue-600">
+                ${formatDonutValue(data.value)}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-600">Exact Amount:</span>
+              <span className="text-xs font-medium text-gray-700">
+                ${originalValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-600">Share:</span>
+              <span className="text-sm font-bold text-green-600">
+                {data.percentage.toFixed(1)}%
+              </span>
+            </div>
+            
+            <div className="pt-1 border-t border-gray-100">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(data.percentage, 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
     return null;
-  };
+  }, []);
 
-  // Custom formatting function for spend values
+  // Enhanced formatting function for spend values with B/M/K system
   const formatSpendValue = (spend: number, originalSpend: number) => {
-    if (originalSpend >= 1000000) {
+    if (originalSpend >= 1000000000) {
+      // Show in billions with B suffix if 1B or more
+      return `${(originalSpend / 1000000000).toFixed(1)}B`;
+    } else if (originalSpend >= 1000000) {
       // Show in millions with M suffix if 1M or more
-      return `${formatNumber(spend)}M`;
+      return `${(originalSpend / 1000000).toFixed(1)}M`;
     } else if (originalSpend >= 1000) {
       // Show in thousands with K suffix if 1K or more but less than 1M
       return `${(originalSpend / 1000).toFixed(0)}K`;
@@ -142,12 +177,28 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
     }
   };
 
+  // Formatting function specifically for donut chart values
+  const formatDonutValue = (value: number) => {
+    // value is already in millions, so we need to convert back to original value
+    const originalValue = value * 1000000;
+    
+    if (originalValue >= 1000000000) {
+      return `${(originalValue / 1000000000).toFixed(1)}B`;
+    } else if (originalValue >= 1000000) {
+      return `${(originalValue / 1000000).toFixed(1)}M`;
+    } else if (originalValue >= 1000) {
+      return `${(originalValue / 1000).toFixed(0)}K`;
+    } else {
+      return `${originalValue.toFixed(0)}`;
+    }
+  };
+
   const TopPublishersContent = () => {
-    // Calculate distribution for left chart (selected brands)
+    // Calculate distribution for left chart (selected brand)
     const leftPublishersData = useMemo(() => {
-      const filteredData = leftChartBrands.length === uniqueBrands.length 
+      const filteredData = leftChartBrand === "all" 
         ? yearFilteredData 
-        : yearFilteredData.filter(row => leftChartBrands.includes(row["brand root"]));
+        : yearFilteredData.filter(row => row["brand root"] === leftChartBrand);
 
       const publisherSpends = filteredData.reduce((acc, row) => {
         const publisher = row.publisher;
@@ -168,13 +219,13 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         }))
         .sort((a, b) => b.originalSpend - a.originalSpend)
         .slice(0, 30); // Top 30
-    }, [yearFilteredData, leftChartBrands, uniqueBrands]);
+    }, [yearFilteredData, leftChartBrand]);
 
-    // Calculate distribution for right chart (selected brands)
+    // Calculate distribution for right chart (selected brand)
     const rightPublishersData = useMemo(() => {
-      const filteredData = yearFilteredData.filter(row => 
-        rightChartBrands.includes(row["brand root"])
-      );
+      const filteredData = rightChartBrand === "all" 
+        ? yearFilteredData 
+        : yearFilteredData.filter(row => row["brand root"] === rightChartBrand);
 
       const publisherSpends = filteredData.reduce((acc, row) => {
         const publisher = row.publisher;
@@ -195,7 +246,7 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         }))
         .sort((a, b) => b.originalSpend - a.originalSpend)
         .slice(0, 30); // Top 30
-    }, [yearFilteredData, rightChartBrands]);
+    }, [yearFilteredData, rightChartBrand]);
 
     return (
       <div className="space-y-6">
@@ -211,42 +262,29 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           <Card className="bg-white border-border shadow-soft rounded-2xl">
             <CardHeader className="pb-4">
               {/* Left Chart Selector */}
-              <div className="space-y-3 mb-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-xs font-medium text-gray-700">
-                      Select Brands:
-                    </label>
-                  </div>
-                  <MultiSelect
-                    options={uniqueBrands}
-                    selected={leftChartBrands}
-                    onChange={setLeftChartBrands}
-                    placeholder="Select brands..."
-                    className="w-full"
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-600 font-medium">
-                      {leftChartBrands.length === uniqueBrands.length ? "All Brands" : `${leftChartBrands.length} brand${leftChartBrands.length === 1 ? '' : 's'} selected`}
-                    </div>
-                    <button
-                      onClick={() => setLeftChartBrands(uniqueBrands)}
-                      className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors font-medium"
-                    >
-                      Select All
-                    </button>
+              <div className="mb-4">
+                <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+                  <div className="flex flex-col gap-1 w-48">
+                    <label className="text-xs font-medium text-foreground">Brand</label>
+                    <SimpleSelect
+                      value={leftChartBrand}
+                      onValueChange={setLeftChartBrand}
+                      options={[
+                        { value: "all", label: "All Brands (Gross)" },
+                        ...uniqueBrands.map(brand => ({ value: brand, label: brand }))
+                      ]}
+                      placeholder="Select brand"
+                    />
                   </div>
                 </div>
               </div>
 
               <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-                {leftChartBrands.length === uniqueBrands.length ? "All Brands (Gross)" : 
-                 leftChartBrands.length === 1 ? leftChartBrands[0] :
-                 `${leftChartBrands.length} Selected Brands`}
+                {leftChartBrand === "all" ? "All Brands (Gross)" : leftChartBrand}
               </CardTitle>
 
               <p className="text-xs text-muted-foreground text-center">
-                Top 30 Publishers - Total: ${formatNumber(leftPublishersData.reduce((sum, item) => sum + item.spend, 0))}M
+                Top 30 Publishers - Total: ${formatDonutValue(leftPublishersData.reduce((sum, item) => sum + item.spend, 0))}
               </p>
             </CardHeader>
             <CardContent>
@@ -317,46 +355,36 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           <Card className="bg-white border-border shadow-soft rounded-2xl">
             <CardHeader className="pb-4">
               {/* Right Chart Selector */}
-              <div className="space-y-3 mb-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-xs font-medium text-gray-700">
-                      Select Brands:
-                    </label>
-                  </div>
-                  <MultiSelect
-                    options={uniqueBrands}
-                    selected={rightChartBrands}
-                    onChange={setRightChartBrands}
-                    placeholder="Select brands..."
-                    className="w-full"
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-600 font-medium">
-                      {rightChartBrands.length} brand{rightChartBrands.length === 1 ? '' : 's'} selected
-                    </div>
-                    <button
-                      onClick={() => {
-                        const aventBrands = uniqueBrands.filter(brand => 
-                          brand.toLowerCase().includes("avent")
-                        );
-                        setRightChartBrands(aventBrands);
-                      }}
-                      className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors font-medium"
-                    >
-                      Select Avent
-                    </button>
+              <div className="mb-4">
+                <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+                  <div className="flex flex-col gap-1 w-48">
+                    <label className="text-xs font-medium text-foreground">Brand</label>
+                    <Select value={rightChartBrand} onValueChange={setRightChartBrand}>
+                      <SelectTrigger className="w-full bg-white border-border rounded-xl">
+                        <SelectValue placeholder="Select brand" />
+                      </SelectTrigger>
+                      <SelectContent 
+                        position="popper"
+                        side="bottom"
+                        align="start"
+                        sticky="partial"
+                      >
+                        <SelectItem value="all">All Brands (Gross)</SelectItem>
+                        {uniqueBrands.map(brand => (
+                          <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
 
               <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-                {rightChartBrands.length === 1 ? rightChartBrands[0] : 
-                 `${rightChartBrands.length} Selected Brands`}
+                {rightChartBrand === "all" ? "All Brands (Gross)" : rightChartBrand}
               </CardTitle>
 
               <p className="text-xs text-muted-foreground text-center">
-                Top 30 Publishers - Total: ${formatNumber(rightPublishersData.reduce((sum, item) => sum + item.spend, 0))}M
+                Top 30 Publishers - Total: ${formatDonutValue(rightPublishersData.reduce((sum, item) => sum + item.spend, 0))}
               </p>
             </CardHeader>
             <CardContent>
@@ -428,13 +456,77 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
   };
 
 
+  // Stable chart component to prevent re-renders
+  const StableDonutChart = memo(({ chartData, chartId }: { chartData: any[], chartId: string }) => {
+    if (chartData.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground text-sm">No data available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ width: '100%', height: '300px', position: 'relative' }}>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={70}
+              outerRadius={100}
+              paddingAngle={2}
+              dataKey="value"
+              isAnimationActive={false}
+              animationBegin={0}
+              animationDuration={0}
+            >
+              {chartData.map((entry, index) => (
+                <Cell 
+                  key={`${chartId}-${entry.name}-${index}`} 
+                  fill={CHART_COLORS[index % CHART_COLORS.length]} 
+                />
+              ))}
+            </Pie>
+            <Tooltip 
+              content={<CustomDonutTooltip />} 
+              isAnimationActive={false}
+              animationDuration={0}
+              wrapperStyle={{ outline: 'none', border: 'none' }}
+            />
+            <Legend 
+              verticalAlign="bottom" 
+              height={40}
+              iconType="circle"
+              iconSize={8}
+              formatter={(value, entry) => (
+                <span style={{ color: entry.color, fontSize: '10px', marginLeft: '4px' }}>
+                  {value}
+                </span>
+              )}
+              wrapperStyle={{
+                fontSize: '10px',
+                paddingTop: '10px'
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  });
+
   const DonutChartContent = ({ title, type }: { title: string, type: string }) => {
-    // Calculate distribution for left chart (selected brands)
+    // Calculate distribution for left chart (selected brand) - deeply memoized
     const leftChartData = useMemo(() => {
       const field = type === "Channel" ? "channel" : "placement";
-      const filteredData = leftChartBrands.length === uniqueBrands.length 
+      const cacheKey = `${leftChartBrand}-${selectedYear}-${type}`;
+      
+      const filteredData = leftChartBrand === "all" 
         ? yearFilteredData 
-        : yearFilteredData.filter(row => leftChartBrands.includes(row["brand root"]));
+        : yearFilteredData.filter(row => row["brand root"] === leftChartBrand);
+
+      if (filteredData.length === 0) return [];
 
       const spends = filteredData.reduce((acc, row) => {
         const key = row[field as keyof DataRow] as string;
@@ -446,21 +538,25 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
 
       const totalSpend = Object.values(spends).reduce((sum, spend) => sum + spend, 0);
 
-      return Object.entries(spends)
+      const result = Object.entries(spends)
         .map(([key, spend]) => ({
           name: key,
           value: spend / 1000000, // Convert to millions
           percentage: ((spend / totalSpend) * 100),
         }))
         .sort((a, b) => b.value - a.value);
-    }, [yearFilteredData, leftChartBrands, type, uniqueBrands]);
+      
+      return result;
+    }, [yearFilteredData.length, leftChartBrand, type, selectedYear]);
 
-    // Calculate distribution for right chart (selected brands)
+    // Calculate distribution for right chart (selected brand) - deeply memoized
     const rightChartData = useMemo(() => {
       const field = type === "Channel" ? "channel" : "placement";
-      const filteredData = yearFilteredData.filter(row => 
-        rightChartBrands.includes(row["brand root"])
-      );
+      const filteredData = rightChartBrand === "all" 
+        ? yearFilteredData 
+        : yearFilteredData.filter(row => row["brand root"] === rightChartBrand);
+
+      if (filteredData.length === 0) return [];
 
       const spends = filteredData.reduce((acc, row) => {
         const key = row[field as keyof DataRow] as string;
@@ -472,14 +568,16 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
 
       const totalSpend = Object.values(spends).reduce((sum, spend) => sum + spend, 0);
 
-      return Object.entries(spends)
+      const result = Object.entries(spends)
         .map(([key, spend]) => ({
           name: key,
           value: spend / 1000000, // Convert to millions
           percentage: ((spend / totalSpend) * 100),
         }))
         .sort((a, b) => b.value - a.value);
-    }, [yearFilteredData, rightChartBrands, type]);
+        
+      return result;
+    }, [yearFilteredData.length, rightChartBrand, type, selectedYear]);
 
     return (
       <div className="space-y-6">
@@ -496,87 +594,40 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           <Card className="bg-white border-border shadow-soft rounded-2xl">
             <CardHeader className="pb-4">
               {/* Left Chart Selector */}
-              <div className="space-y-3 mb-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-xs font-medium text-gray-700">
-                      Select Brands:
-                    </label>
-                  </div>
-                  <MultiSelect
-                    options={uniqueBrands}
-                    selected={leftChartBrands}
-                    onChange={setLeftChartBrands}
-                    placeholder="Select brands..."
-                    className="w-full"
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-600 font-medium">
-                      {leftChartBrands.length === uniqueBrands.length ? "All Brands" : `${leftChartBrands.length} brand${leftChartBrands.length === 1 ? '' : 's'} selected`}
-                    </div>
-                    <button
-                      onClick={() => setLeftChartBrands(uniqueBrands)}
-                      className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors font-medium"
-                    >
-                      Select All
-                    </button>
+              <div className="mb-4">
+                <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+                  <div className="flex flex-col gap-1 w-48">
+                    <label className="text-xs font-medium text-foreground">Brand</label>
+                    <Select value={leftChartBrand} onValueChange={setLeftChartBrand}>
+                      <SelectTrigger className="w-full bg-white border-border rounded-xl">
+                        <SelectValue placeholder="Select brand" />
+                      </SelectTrigger>
+                      <SelectContent 
+                        position="popper"
+                        side="bottom"
+                        align="start"
+                        sticky="partial"
+                      >
+                        <SelectItem value="all">All Brands (Gross)</SelectItem>
+                        {uniqueBrands.map(brand => (
+                          <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
 
               <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-                {leftChartBrands.length === uniqueBrands.length ? "All Brands (Gross)" : 
-                 leftChartBrands.length === 1 ? leftChartBrands[0] :
-                 `${leftChartBrands.length} Selected Brands`}
+                {leftChartBrand === "all" ? "All Brands (Gross)" : leftChartBrand}
               </CardTitle>
 
               <p className="text-xs text-muted-foreground text-center">
-                Total spend: ${formatNumber(leftChartData.reduce((sum, item) => sum + item.value, 0))}M
+                Total spend: ${formatDonutValue(leftChartData.reduce((sum, item) => sum + item.value, 0))}
               </p>
             </CardHeader>
             <CardContent>
-              {leftChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={leftChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {leftChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-left-${index}`} 
-                          fill={CHART_COLORS[index % CHART_COLORS.length]} 
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomDonutTooltip />} />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={40}
-                      iconType="circle"
-                      iconSize={8}
-                      formatter={(value, entry) => (
-                        <span style={{ color: entry.color, fontSize: '10px', marginLeft: '4px' }}>
-                          {value}
-                        </span>
-                      )}
-                      wrapperStyle={{
-                        fontSize: '10px',
-                        paddingTop: '10px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <p className="text-muted-foreground text-sm">No data available</p>
-                </div>
-              )}
+              <StableDonutChart chartData={leftChartData} chartId="left-chart" />
             </CardContent>
           </Card>
 
@@ -584,91 +635,40 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           <Card className="bg-white border-border shadow-soft rounded-2xl">
             <CardHeader className="pb-4">
               {/* Right Chart Selector */}
-              <div className="space-y-3 mb-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-xs font-medium text-gray-700">
-                      Select Brands:
-                    </label>
-                  </div>
-                  <MultiSelect
-                    options={uniqueBrands}
-                    selected={rightChartBrands}
-                    onChange={setRightChartBrands}
-                    placeholder="Select brands..."
-                    className="w-full"
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-600 font-medium">
-                      {rightChartBrands.length} brand{rightChartBrands.length === 1 ? '' : 's'} selected
-                    </div>
-                    <button
-                      onClick={() => {
-                        const aventBrands = uniqueBrands.filter(brand => 
-                          brand.toLowerCase().includes("avent")
-                        );
-                        setRightChartBrands(aventBrands);
-                      }}
-                      className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors font-medium"
-                    >
-                      Select Avent
-                    </button>
+              <div className="mb-4">
+                <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+                  <div className="flex flex-col gap-1 w-48">
+                    <label className="text-xs font-medium text-foreground">Brand</label>
+                    <Select value={rightChartBrand} onValueChange={setRightChartBrand}>
+                      <SelectTrigger className="w-full bg-white border-border rounded-xl">
+                        <SelectValue placeholder="Select brand" />
+                      </SelectTrigger>
+                      <SelectContent 
+                        position="popper"
+                        side="bottom"
+                        align="start"
+                        sticky="partial"
+                      >
+                        <SelectItem value="all">All Brands (Gross)</SelectItem>
+                        {uniqueBrands.map(brand => (
+                          <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
 
               <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-                {rightChartBrands.length === 1 ? rightChartBrands[0] : 
-                 `${rightChartBrands.length} Selected Brands`}
+                {rightChartBrand === "all" ? "All Brands (Gross)" : rightChartBrand}
               </CardTitle>
 
               <p className="text-xs text-muted-foreground text-center">
-                Total spend: ${formatNumber(rightChartData.reduce((sum, item) => sum + item.value, 0))}M
+                Total spend: ${formatDonutValue(rightChartData.reduce((sum, item) => sum + item.value, 0))}
               </p>
             </CardHeader>
             <CardContent>
-              {rightChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={rightChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {rightChartData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-right-${index}`} 
-                          fill={CHART_COLORS[index % CHART_COLORS.length]} 
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomDonutTooltip />} />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={40}
-                      iconType="circle"
-                      iconSize={8}
-                      formatter={(value, entry) => (
-                        <span style={{ color: entry.color, fontSize: '10px', marginLeft: '4px' }}>
-                          {value}
-                        </span>
-                      )}
-                      wrapperStyle={{
-                        fontSize: '10px',
-                        paddingTop: '10px'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <p className="text-muted-foreground text-sm">Select brands to view data</p>
-                </div>
-              )}
+              <StableDonutChart chartData={rightChartData} chartId="right-chart" />
             </CardContent>
           </Card>
         </div>
@@ -694,7 +694,12 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
             <SelectTrigger className="w-full bg-white border-border rounded-xl">
               <SelectValue placeholder="Select year" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent 
+              position="popper"
+              side="bottom"
+              align="start"
+              sticky="partial"
+            >
               <SelectItem value="all">All Years</SelectItem>
               {uniqueYears.map(year => (
                 <SelectItem key={year} value={year}>{year}</SelectItem>

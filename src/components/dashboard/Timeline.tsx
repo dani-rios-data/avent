@@ -38,6 +38,18 @@ const BRAND_COLORS = [
   "#06b6d4", // cyan
 ];
 
+// Helper function to parse month-year in both formats ("Jul-2024" or "Jul 2024")
+const parseMonthYear = (monthYear: string) => {
+  // Handle both formats: "Jul-2024" and "Jul 2024"
+  const parts = monthYear.includes('-') ? monthYear.split('-') : monthYear.split(' ');
+  if (parts.length === 2) {
+    const [month, year] = parts;
+    return new Date(`${month} 1, ${year}`);
+  }
+  // Fallback: try to parse as-is
+  return new Date(monthYear);
+};
+
 const Timeline = ({ data, title = "Brand" }: TimelineProps) => {
   const allBrandsWithSpend = useMemo(() => {
     // Calculate total spend for each brand
@@ -85,7 +97,7 @@ const Timeline = ({ data, title = "Brand" }: TimelineProps) => {
 
     // Sort by month-year chronologically
     return Object.values(monthData).sort((a: any, b: any) => {
-      return new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime();
+      return parseMonthYear(a.monthYear).getTime() - parseMonthYear(b.monthYear).getTime();
     });
   }, [data]);
 

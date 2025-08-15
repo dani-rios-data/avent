@@ -20,6 +20,18 @@ interface ComparisonTableProps {
   selectedBrands: string[];
 }
 
+// Helper function to extract month from month-year in both formats
+const extractMonth = (monthYear: string) => {
+  // Handle both formats: "Jul-2024" and "Jul 2024"
+  if (monthYear.includes('-')) {
+    return monthYear.split('-')[0];
+  } else if (monthYear.includes(' ')) {
+    return monthYear.split(' ')[0];
+  }
+  // Fallback: assume it's just the month
+  return monthYear;
+};
+
 const ComparisonTable = ({ data, selectedBrands }: ComparisonTableProps) => {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   
@@ -32,8 +44,8 @@ const ComparisonTable = ({ data, selectedBrands }: ComparisonTableProps) => {
       const year = row.year;
       const monthYear = row["month-year"];
       
-      // Extract month from month-year (e.g., "Jan 2024" -> "Jan")
-      const monthName = monthYear.split(' ')[0];
+      // Extract month from month-year (e.g., "Jul-2024" -> "Jul" or "Jul 2024" -> "Jul")
+      const monthName = extractMonth(monthYear);
       
       if (!groupedData[brand]) {
         groupedData[brand] = {};
