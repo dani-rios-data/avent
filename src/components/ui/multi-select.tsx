@@ -110,18 +110,30 @@ export function MultiSelect({
           </div>
           
           <div className="border-b border-border">
-            <div className="flex items-center space-x-2 p-3">
+            <div 
+              className="flex items-center space-x-2 p-3 hover:bg-muted/30"
+            >
               <Checkbox
                 id="select-all"
                 checked={allSelected}
-                onCheckedChange={handleSelectAll}
+                onCheckedChange={() => {
+                  handleSelectAll();
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
                 className={cn(
                   someSelected && !allSelected && "data-[state=checked]:bg-muted"
                 )}
               />
               <label
                 htmlFor="select-all"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelectAll();
+                }}
               >
                 {allSelected ? "Deselect All" : "Select All"}
               </label>
@@ -137,20 +149,32 @@ export function MultiSelect({
               filteredOptions.map((option) => (
                 <div
                   key={option}
-                  className="flex items-center space-x-2 p-3 hover:bg-muted/50 cursor-pointer"
-                  onClick={() => handleToggleOption(option)}
+                  className="flex items-center space-x-2 p-3 hover:bg-muted/50"
                 >
                   <Checkbox
                     checked={selected.includes(option)}
-                    onChange={() => {}} // Controlled by parent click
+                    onCheckedChange={(checked) => {
+                      handleToggleOption(option);
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
                   />
-                  <label className="text-sm flex-1 cursor-pointer">
+                  <label 
+                    className="text-sm flex-1 cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggleOption(option);
+                    }}
+                  >
                     {option}
                   </label>
                 </div>
               ))
             )}
           </div>
+          
         </PopoverContent>
       </Popover>
     </div>

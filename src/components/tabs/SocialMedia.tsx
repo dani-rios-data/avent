@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useCSVData } from "@/hooks/useCSVData";
-import { AlertCircle, Instagram, Heart, MessageCircle, Users, Eye, Share2, TrendingUp, Video, FileText, Loader2 } from "lucide-react";
+import { AlertCircle, Instagram, Heart, MessageCircle, Users, Eye, Share2, TrendingUp, Video, FileText, Loader2, BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatNumber } from "@/lib/utils";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 // Custom TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -76,6 +78,11 @@ interface TikTokDataRow {
 
 const SocialMedia = () => {
   const [activeTab, setActiveTab] = useState("instagram");
+  const [instagramSelectedYears, setInstagramSelectedYears] = useState<string[]>([]);
+  const [instagramSelectedMonths, setInstagramSelectedMonths] = useState<string[]>([]);
+  const [tiktokSelectedYears, setTiktokSelectedYears] = useState<string[]>([]);
+  const [tiktokSelectedMonths, setTiktokSelectedMonths] = useState<string[]>([]);
+  const [instagramPostTypeSelectedBrands, setInstagramPostTypeSelectedBrands] = useState<string[]>([]);
   
   const { 
     data: instagramData, 
@@ -88,6 +95,168 @@ const SocialMedia = () => {
     loading: tiktokLoading, 
     error: tiktokError 
   } = useCSVData("/SM_TikTok_Breast_Pump_Brands.csv");
+
+  // Extract unique years, months, and brands from Instagram dataset
+  const { instagramUniqueYears, instagramUniqueMonths, instagramUniqueBrands, filteredInstagramData } = useMemo(() => {
+    const igData = instagramData as unknown as InstagramDataRow[];
+    
+    if (!igData) return { instagramUniqueYears: [], instagramUniqueMonths: [], instagramUniqueBrands: [], filteredInstagramData: [] };
+
+    // Extract years and months from Instagram dataset
+    const allDates = igData.map(row => row.published_date).filter(Boolean);
+
+    const years = new Set<string>();
+    const months = new Set<string>();
+
+    allDates.forEach(dateStr => {
+      if (dateStr) {
+        // Handle various date formats (MM/DD/YYYY, YYYY-MM-DD, etc.)
+        let year: string, month: string;
+        
+        if (dateStr.includes('/')) {
+          // MM/DD/YYYY format
+          const parts = dateStr.split('/');
+          if (parts.length === 3) {
+            month = parts[0].padStart(2, '0');
+            year = parts[2];
+          }
+        } else if (dateStr.includes('-')) {
+          // YYYY-MM-DD format
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            year = parts[0];
+            month = parts[1];
+          }
+        }
+        
+        if (year && month) {
+          years.add(year);
+          months.add(month);
+        }
+      }
+    });
+
+    const sortedYears = Array.from(years).sort();
+    const sortedMonths = Array.from(months).sort();
+
+    // Extract unique brands
+    const brands = new Set<string>();
+    igData.forEach(row => {
+      if (row.company) {
+        brands.add(row.company);
+      }
+    });
+    const sortedBrands = Array.from(brands).sort();
+
+    // Filter Instagram data based on selected years and months
+    const filteredData = igData.filter(row => {
+      if (!row.published_date) return false;
+      
+      let year: string, month: string;
+      
+      if (row.published_date.includes('/')) {
+        const parts = row.published_date.split('/');
+        if (parts.length === 3) {
+          month = parts[0].padStart(2, '0');
+          year = parts[2];
+        }
+      } else if (row.published_date.includes('-')) {
+        const parts = row.published_date.split('-');
+        if (parts.length === 3) {
+          year = parts[0];
+          month = parts[1];
+        }
+      }
+      
+      const yearMatch = instagramSelectedYears.length === 0 || instagramSelectedYears.includes(year);
+      const monthMatch = instagramSelectedMonths.length === 0 || instagramSelectedMonths.includes(month);
+      
+      return yearMatch && monthMatch;
+    });
+
+    return {
+      instagramUniqueYears: sortedYears,
+      instagramUniqueMonths: sortedMonths,
+      instagramUniqueBrands: sortedBrands,
+      filteredInstagramData: filteredData
+    };
+  }, [instagramData, instagramSelectedYears, instagramSelectedMonths]);
+
+  // Extract unique years and months from TikTok dataset
+  const { tiktokUniqueYears, tiktokUniqueMonths, filteredTikTokData } = useMemo(() => {
+    const ttData = tiktokData as unknown as TikTokDataRow[];
+    
+    if (!ttData) return { tiktokUniqueYears: [], tiktokUniqueMonths: [], filteredTikTokData: [] };
+
+    // Extract years and months from TikTok dataset
+    const allDates = ttData.map(row => row.published_date).filter(Boolean);
+
+    const years = new Set<string>();
+    const months = new Set<string>();
+
+    allDates.forEach(dateStr => {
+      if (dateStr) {
+        // Handle various date formats (MM/DD/YYYY, YYYY-MM-DD, etc.)
+        let year: string, month: string;
+        
+        if (dateStr.includes('/')) {
+          // MM/DD/YYYY format
+          const parts = dateStr.split('/');
+          if (parts.length === 3) {
+            month = parts[0].padStart(2, '0');
+            year = parts[2];
+          }
+        } else if (dateStr.includes('-')) {
+          // YYYY-MM-DD format
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            year = parts[0];
+            month = parts[1];
+          }
+        }
+        
+        if (year && month) {
+          years.add(year);
+          months.add(month);
+        }
+      }
+    });
+
+    const sortedYears = Array.from(years).sort();
+    const sortedMonths = Array.from(months).sort();
+
+    // Filter TikTok data based on selected years and months
+    const filteredData = ttData.filter(row => {
+      if (!row.published_date) return false;
+      
+      let year: string, month: string;
+      
+      if (row.published_date.includes('/')) {
+        const parts = row.published_date.split('/');
+        if (parts.length === 3) {
+          month = parts[0].padStart(2, '0');
+          year = parts[2];
+        }
+      } else if (row.published_date.includes('-')) {
+        const parts = row.published_date.split('-');
+        if (parts.length === 3) {
+          year = parts[0];
+          month = parts[1];
+        }
+      }
+      
+      const yearMatch = tiktokSelectedYears.length === 0 || tiktokSelectedYears.includes(year);
+      const monthMatch = tiktokSelectedMonths.length === 0 || tiktokSelectedMonths.includes(month);
+      
+      return yearMatch && monthMatch;
+    });
+
+    return {
+      tiktokUniqueYears: sortedYears,
+      tiktokUniqueMonths: sortedMonths,
+      filteredTikTokData: filteredData
+    };
+  }, [tiktokData, tiktokSelectedYears, tiktokSelectedMonths]);
 
   if (instagramLoading || tiktokLoading) {
     return (
@@ -116,7 +285,7 @@ const SocialMedia = () => {
   }
 
   const InstagramSection = () => {
-    const igData = instagramData as unknown as InstagramDataRow[];
+    const igData = filteredInstagramData;
     
     // Calculate improved metrics with proper number parsing
     const totalEngagement = igData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
@@ -131,17 +300,59 @@ const SocialMedia = () => {
 
     return (
       <div className="space-y-6">
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
+        {/* Instagram Filters */}
+        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+          <div className="flex flex-wrap gap-4 items-start">
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Year</label>
+              <MultiSelect
+                options={instagramUniqueYears}
+                selected={instagramSelectedYears}
+                onChange={setInstagramSelectedYears}
+                placeholder="All Years"
+                className="w-full"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Month</label>
+              <MultiSelect
+                options={instagramUniqueMonths.map(month => {
+                  const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                  const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  const index = monthNames.indexOf(month);
+                  return index !== -1 ? monthLabels[index] : month;
+                })}
+                selected={instagramSelectedMonths.map(month => {
+                  const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                  const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  const index = monthNames.indexOf(month);
+                  return index !== -1 ? monthLabels[index] : month;
+                })}
+                onChange={(selectedLabels) => {
+                  const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                  const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  const selectedValues = selectedLabels.map(label => {
+                    const index = monthLabels.indexOf(label);
+                    return index !== -1 ? monthNames[index] : label;
+                  });
+                  setInstagramSelectedMonths(selectedValues);
+                }}
+                placeholder="All Months"
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Top Row - 4 metrics centered */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-pink-600 capitalize tracking-wide">Total Posts</p>
-                  <p className="text-2xl font-bold text-pink-800 tracking-tight">{formatNumber(igData.length)}</p>
+                  <p className="text-2xl font-bold text-pink-800 tracking-tight">{igData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-pink-200 rounded-xl flex items-center justify-center">
                   <FileText className="w-5 h-5 text-pink-700" />
@@ -191,13 +402,16 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+        </div>
+
+        {/* Bottom Row - 4 metrics centered */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Avg Engagement Rate</p>
-                  <p className="text-2xl font-bold text-purple-800 tracking-tight">{(avgEngagementRate * 100).toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-purple-800 tracking-tight">{(avgEngagementRate * 100).toFixed(2)}%</p>
                 </div>
                 <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-purple-700" />
@@ -211,7 +425,7 @@ const SocialMedia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Total Engagement</p>
-                  <p className="text-2xl font-bold text-indigo-800 tracking-tight">{formatNumber(totalEngagement)}</p>
+                  <p className="text-2xl font-bold text-indigo-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
                 </div>
                 <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-indigo-700" />
@@ -230,6 +444,229 @@ const SocialMedia = () => {
                 <div className="w-10 h-10 bg-orange-200 rounded-xl flex items-center justify-center">
                   <Users className="w-5 h-5 text-orange-700" />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 shadow-soft rounded-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-teal-600 capitalize tracking-wide">Post Types</p>
+                  <p className="text-2xl font-bold text-teal-800 tracking-tight">{new Set(igData.map(row => row.post_type)).size}</p>
+                </div>
+                <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
+                  <Video className="w-5 h-5 text-teal-700" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Company Ranking - Horizontal Bar Chart */}
+          <Card className="shadow-soft rounded-2xl border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-pink-600" />
+                Top Companies by Engagement Rate by Follower
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600">Companies ranked by average engagement rate by follower</CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="max-h-80 overflow-y-auto overflow-x-visible relative">
+                {(() => {
+                  if (!igData || igData.length === 0) return <div className="text-center text-gray-500 py-8">No data available</div>;
+                  
+                  const companyEngagementRate = igData.reduce((acc, row) => {
+                    const company = row.company;
+                    const engagementRate = Number(row.engagement_rate_by_follower) || 0;
+                    const followers = Number(row.followers) || 0;
+                    
+                    if (!company || engagementRate === 0) return acc;
+                    
+                    if (!acc[company]) {
+                      acc[company] = { 
+                        totalRate: 0, 
+                        count: 0, 
+                        followers: followers // Use most recent followers count
+                      };
+                    }
+                    acc[company].totalRate += engagementRate;
+                    acc[company].count += 1;
+                    if (followers > 0) {
+                      acc[company].followers = followers; // Update with latest non-zero follower count
+                    }
+                    
+                    return acc;
+                  }, {} as Record<string, { totalRate: number; count: number; followers: number }>);
+
+                  const sortedCompanies = Object.entries(companyEngagementRate)
+                    .map(([company, data]) => [
+                      company, 
+                      data.totalRate / data.count, 
+                      data.count, 
+                      data.followers
+                    ] as [string, number, number, number])
+                    .filter(([company, avgRate]) => avgRate > 0)
+                    .sort((a, b) => b[1] - a[1]);
+
+                  const maxEngagementRate = sortedCompanies[0]?.[1] || 1;
+
+                  return (
+                    <div className="space-y-3 pt-12">
+                      {sortedCompanies.map(([company, engagementRate, postCount, followers], index) => (
+                        <div key={company} className="flex items-center gap-3 group">
+                          <div className="w-6 text-xs font-medium text-gray-500 text-right">
+                            #{index + 1}
+                          </div>
+                          <div className="flex-1 relative">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
+                                {company}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {(engagementRate * 100).toFixed(2)}%
+                              </span>
+                            </div>
+                            <div 
+                              className="w-full bg-gray-200 rounded-full h-2 cursor-pointer relative"
+                              onMouseEnter={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.custom-tooltip') as HTMLElement;
+                                if (tooltip) {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  tooltip.style.display = 'block';
+                                  tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                                  tooltip.style.top = `${rect.top}px`;
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.custom-tooltip') as HTMLElement;
+                                if (tooltip) tooltip.style.display = 'none';
+                              }}
+                            >
+                              <div 
+                                className="bg-pink-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(engagementRate / maxEngagementRate) * 100}%` }}
+                              />
+                              <div 
+                                className="custom-tooltip fixed bg-gray-800 text-white text-xs rounded-lg px-3 py-2 shadow-xl whitespace-nowrap pointer-events-none"
+                                style={{ 
+                                  display: 'none', 
+                                  zIndex: 99999,
+                                  transform: 'translate(-50%, -100%)',
+                                  marginTop: '-8px'
+                                }}
+                              >
+                                <div className="font-semibold">{company}</div>
+                                <div className="text-gray-300">Avg Engagement Rate: {(engagementRate * 100).toFixed(2)}%</div>
+                                <div className="text-gray-300">Total Posts: {postCount.toLocaleString()}</div>
+                                <div className="text-gray-300">Followers: {followers.toLocaleString()}</div>
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Post Type Distribution - Donut Chart */}
+          <Card className="shadow-soft rounded-2xl border-gray-200">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <Video className="w-5 h-5 text-teal-600" />
+                    Post Type Distribution
+                  </CardTitle>
+                  <CardDescription className="text-sm text-gray-600">Distribution of content types</CardDescription>
+                </div>
+                <div className="flex flex-col gap-1 min-w-[150px]">
+                  <label className="text-xs font-medium text-gray-600">Brand</label>
+                  <MultiSelect
+                    options={['All Brands', ...instagramUniqueBrands]}
+                    selected={instagramPostTypeSelectedBrands}
+                    onChange={setInstagramPostTypeSelectedBrands}
+                    placeholder="All Brands"
+                    className="w-full text-xs"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={(() => {
+                        // Filter data by selected brands
+                        const filteredData = instagramPostTypeSelectedBrands.length === 0 || instagramPostTypeSelectedBrands.includes('All Brands')
+                          ? igData
+                          : igData.filter(row => instagramPostTypeSelectedBrands.includes(row.company));
+
+                        const postTypeCount = filteredData.reduce((acc, row) => {
+                          const postType = row.post_type || 'Unknown';
+                          acc[postType] = (acc[postType] || 0) + 1;
+                          return acc;
+                        }, {} as Record<string, number>);
+
+                        const total = Object.values(postTypeCount).reduce((sum, count) => sum + count, 0);
+
+                        return Object.entries(postTypeCount)
+                          .map(([type, count]) => ({
+                            name: type,
+                            value: count,
+                            percentage: ((count / total) * 100).toFixed(1)
+                          }))
+                          .sort((a, b) => b.value - a.value);
+                      })()}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {(() => {
+                        const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+                        
+                        // Filter data by selected brands (same logic as above)
+                        const filteredData = instagramPostTypeSelectedBrands.length === 0 || instagramPostTypeSelectedBrands.includes('All Brands')
+                          ? igData
+                          : igData.filter(row => instagramPostTypeSelectedBrands.includes(row.company));
+
+                        const postTypeCount = filteredData.reduce((acc, row) => {
+                          const postType = row.post_type || 'Unknown';
+                          acc[postType] = (acc[postType] || 0) + 1;
+                          return acc;
+                        }, {} as Record<string, number>);
+
+                        return Object.keys(postTypeCount).map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                        ));
+                      })()}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name, props) => [
+                        `${value} posts (${props.payload?.percentage}%)`,
+                        'Count'
+                      ]}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value) => (
+                        <span style={{ fontSize: '12px' }}>{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -263,6 +700,10 @@ const SocialMedia = () => {
                         <Heart className="w-3 h-3" />
                         {formatNumber(post.likes)} likes
                       </div>
+                      <div className="flex items-center gap-1 text-xs text-green-600">
+                        <Users className="w-3 h-3" />
+                        {(post.engagement_rate_by_follower * 100).toFixed(2)}%
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-between items-center mt-3 pt-2 border-t border-pink-200">
@@ -270,7 +711,7 @@ const SocialMedia = () => {
                     <div className="flex items-center gap-1 text-xs">
                       <Users className="w-3 h-3 text-green-600" />
                       <span className="text-green-700 font-medium">
-                        {(post.engagement_rate_by_follower * 100).toFixed(1)}% engagement
+                        {(post.engagement_rate_by_follower * 100).toFixed(2)}% engagement
                       </span>
                     </div>
                   </div>
@@ -284,7 +725,7 @@ const SocialMedia = () => {
   };
 
   const TikTokSection = () => {
-    const ttData = tiktokData as unknown as TikTokDataRow[];
+    const ttData = filteredTikTokData;
     
     // Calculate improved metrics with proper number parsing
     const totalEngagement = ttData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
@@ -300,17 +741,59 @@ const SocialMedia = () => {
 
     return (
       <div className="space-y-6">
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
+        {/* TikTok Filters */}
+        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+          <div className="flex flex-wrap gap-4 items-start">
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Year</label>
+              <MultiSelect
+                options={tiktokUniqueYears}
+                selected={tiktokSelectedYears}
+                onChange={setTiktokSelectedYears}
+                placeholder="All Years"
+                className="w-full"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Month</label>
+              <MultiSelect
+                options={tiktokUniqueMonths.map(month => {
+                  const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                  const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  const index = monthNames.indexOf(month);
+                  return index !== -1 ? monthLabels[index] : month;
+                })}
+                selected={tiktokSelectedMonths.map(month => {
+                  const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                  const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  const index = monthNames.indexOf(month);
+                  return index !== -1 ? monthLabels[index] : month;
+                })}
+                onChange={(selectedLabels) => {
+                  const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                  const monthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                  const selectedValues = selectedLabels.map(label => {
+                    const index = monthLabels.indexOf(label);
+                    return index !== -1 ? monthNames[index] : label;
+                  });
+                  setTiktokSelectedMonths(selectedValues);
+                }}
+                placeholder="All Months"
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Top Row - 4 metrics centered */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-violet-50 to-violet-100 border-violet-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-violet-600 capitalize tracking-wide">Total Videos</p>
-                  <p className="text-2xl font-bold text-violet-800 tracking-tight">{formatNumber(ttData.length)}</p>
+                  <p className="text-2xl font-bold text-violet-800 tracking-tight">{ttData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-violet-200 rounded-xl flex items-center justify-center">
                   <TikTokIcon className="w-5 h-5 text-violet-700" />
@@ -360,7 +843,10 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+        </div>
+
+        {/* Bottom Row - 4 metrics centered */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -380,7 +866,7 @@ const SocialMedia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-amber-600 capitalize tracking-wide">Avg Engagement Rate</p>
-                  <p className="text-2xl font-bold text-amber-800 tracking-tight">{(avgEngagementRate * 100).toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-amber-800 tracking-tight">{(avgEngagementRate * 100).toFixed(2)}%</p>
                 </div>
                 <div className="w-10 h-10 bg-amber-200 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-amber-700" />
@@ -394,7 +880,7 @@ const SocialMedia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Total Engagement</p>
-                  <p className="text-2xl font-bold text-purple-800 tracking-tight">{formatNumber(totalEngagement)}</p>
+                  <p className="text-2xl font-bold text-purple-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
                 </div>
                 <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-purple-700" />
@@ -402,7 +888,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -413,6 +899,141 @@ const SocialMedia = () => {
                 <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
                   <Users className="w-5 h-5 text-teal-700" />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Company Ranking - Horizontal Bar Chart */}
+          <Card className="shadow-soft rounded-2xl border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-violet-600" />
+                Top Companies by Views
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600">Companies ranked by total views</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-80 overflow-y-auto">
+                {(() => {
+                  if (!ttData || ttData.length === 0) return <div className="text-center text-gray-500 py-8">No data available</div>;
+                  
+                  const companyViews = ttData.reduce((acc, row) => {
+                    const company = row.company;
+                    const views = Number(row.views) || 0;
+                    
+                    if (!company || views === 0) return acc;
+                    
+                    acc[company] = (acc[company] || 0) + views;
+                    return acc;
+                  }, {} as Record<string, number>);
+
+                  const sortedCompanies = Object.entries(companyViews)
+                    .filter(([company, views]) => views > 0)
+                    .sort((a, b) => b[1] - a[1]);
+
+                  const maxViews = sortedCompanies[0]?.[1] || 1;
+
+                  return (
+                    <div className="space-y-3">
+                      {sortedCompanies.map(([company, views], index) => (
+                        <div key={company} className="flex items-center gap-3">
+                          <div className="w-6 text-xs font-medium text-gray-500 text-right">
+                            #{index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]" title={company}>
+                                {company}
+                              </span>
+                              <span className="text-xs text-gray-500 ml-2">
+                                {formatNumber(views)}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-violet-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(views / maxViews) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Post Type Distribution - Donut Chart */}
+          <Card className="shadow-soft rounded-2xl border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Video className="w-5 h-5 text-teal-600" />
+                Post Type Distribution
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600">Distribution of content types</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div style={{ width: '100%', height: '300px' }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={(() => {
+                        const postTypeCount = ttData.reduce((acc, row) => {
+                          const postType = row.post_type || 'Unknown';
+                          acc[postType] = (acc[postType] || 0) + 1;
+                          return acc;
+                        }, {} as Record<string, number>);
+
+                        const total = Object.values(postTypeCount).reduce((sum, count) => sum + count, 0);
+
+                        return Object.entries(postTypeCount)
+                          .map(([type, count]) => ({
+                            name: type,
+                            value: count,
+                            percentage: ((count / total) * 100).toFixed(1)
+                          }))
+                          .sort((a, b) => b.value - a.value);
+                      })()}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {(() => {
+                        const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#f472b6', '#ef4444'];
+                        const postTypeCount = ttData.reduce((acc, row) => {
+                          const postType = row.post_type || 'Unknown';
+                          acc[postType] = (acc[postType] || 0) + 1;
+                          return acc;
+                        }, {} as Record<string, number>);
+
+                        return Object.keys(postTypeCount).map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                        ));
+                      })()}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name, props) => [
+                        `${value} videos (${props.payload?.percentage}%)`,
+                        'Count'
+                      ]}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36}
+                      formatter={(value) => (
+                        <span style={{ fontSize: '12px' }}>{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -446,6 +1067,10 @@ const SocialMedia = () => {
                         <Heart className="w-3 h-3" />
                         {formatNumber(video.likes)} likes
                       </div>
+                      <div className="flex items-center gap-1 text-xs text-amber-600">
+                        <TrendingUp className="w-3 h-3" />
+                        {(video.engagement_rate_by_view * 100).toFixed(2)}%
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-between items-center mt-3 pt-2 border-t border-violet-200">
@@ -453,7 +1078,7 @@ const SocialMedia = () => {
                     <div className="flex items-center gap-1 text-xs">
                       <TrendingUp className="w-3 h-3 text-amber-600" />
                       <span className="text-amber-700 font-medium">
-                        {(video.engagement_rate_by_view * 100).toFixed(1)}% engagement
+                        {(video.engagement_rate_by_view * 100).toFixed(2)}% engagement
                       </span>
                     </div>
                   </div>
@@ -468,19 +1093,26 @@ const SocialMedia = () => {
 
   return (
     <div className="space-y-6">
+      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg py-2 px-4 mb-6 w-full">
+        <p className="text-sm text-blue-800 font-medium text-center">
+          Dataset covers advertising data from January 1, 2024 to July 22, 2025
+        </p>
+      </div>
+
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-4 shadow-soft">
         <div className="flex items-center justify-center gap-3">
           <div className="w-8 h-8 bg-purple-200 rounded-xl flex items-center justify-center">
             <Instagram className="w-4 h-4 text-purple-700" />
           </div>
-          <h2 className="text-lg font-bold text-purple-800 text-center tracking-wide">
-            Social Media Analysis
-          </h2>
           <div className="w-8 h-8 bg-pink-200 rounded-xl flex items-center justify-center">
             <TikTokIcon className="w-4 h-4 text-pink-700" />
           </div>
+          <h2 className="text-lg font-bold text-purple-800 text-center tracking-wide">
+            Social Media Analysis
+          </h2>
         </div>
       </div>
+
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-white to-gray-50 shadow-soft rounded-2xl p-1 border border-gray-200">

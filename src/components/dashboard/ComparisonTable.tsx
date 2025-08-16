@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 
 interface DataRow {
   "month-year": string;
@@ -136,29 +136,26 @@ const ComparisonTable = ({ data, selectedBrands }: ComparisonTableProps) => {
             {/* Second header row - Year and YoY columns */}
             <tr className="bg-muted/30">
               {selectedBrands.map((brand) => (
-                <>
+                <React.Fragment key={`header-${brand}`}>
                   <th 
-                    key={`${brand}-2024`}
                     className="font-medium text-amber-700 bg-yellow-50 px-4 py-1 text-center border-r border-gray-100 text-xs"
                     style={{ minWidth: '120px' }}
                   >
                     2024
                   </th>
                   <th 
-                    key={`${brand}-2025`}
                     className="font-medium text-amber-700 bg-yellow-50 px-4 py-1 text-center border-r border-gray-100 text-xs"
                     style={{ minWidth: '120px' }}
                   >
                     2025
                   </th>
                   <th 
-                    key={`${brand}-yoy`}
                     className="font-medium text-amber-700 bg-yellow-50 px-4 py-1 text-center border-r border-gray-200 text-xs"
                     style={{ minWidth: '80px' }}
                   >
                     YoY
                   </th>
-                </>
+                </React.Fragment>
               ))}
             </tr>
           </thead>
@@ -172,26 +169,23 @@ const ComparisonTable = ({ data, selectedBrands }: ComparisonTableProps) => {
                 {selectedBrands.map((brand) => {
                   const monthData = processedData[brand]?.[month];
                   return (
-                    <>
+                    <React.Fragment key={`${brand}-${month}`}>
                       <td 
-                        key={`${brand}-2024-${month}`}
                         className="px-4 py-2 text-right font-medium border-r border-gray-100 text-xs"
                       >
                         {formatCurrency(monthData?.["2024"] || 0)}
                       </td>
                       <td 
-                        key={`${brand}-2025-${month}`}
                         className="px-4 py-2 text-right font-medium border-r border-gray-100 text-xs"
                       >
                         {formatCurrency(monthData?.["2025"] || 0)}
                       </td>
                       <td 
-                        key={`${brand}-yoy-${month}`}
                         className={`px-4 py-2 text-right font-medium border-r border-gray-200 text-xs ${getYoYColor(monthData?.yoy || 0)}`}
                       >
                         {formatYoY(monthData?.yoy || 0)}
                       </td>
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </tr>
