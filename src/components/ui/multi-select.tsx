@@ -1,11 +1,10 @@
-import { useState, useMemo, useEffect } from "react";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 
 interface MultiSelectProps {
   options: string[];
@@ -27,22 +26,6 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Close dropdown on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      if (open) {
-        setOpen(false);
-      }
-    };
-
-    if (open) {
-      window.addEventListener('scroll', handleScroll, true);
-      return () => {
-        window.removeEventListener('scroll', handleScroll, true);
-      };
-    }
-  }, [open]);
-
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
     return options.filter(option => 
@@ -56,6 +39,7 @@ export function MultiSelect({
     } else {
       onChange(options);
     }
+    setOpen(true);
   };
 
   const handleToggleOption = (option: string) => {
@@ -64,10 +48,7 @@ export function MultiSelect({
     } else {
       onChange([...selected, option]);
     }
-  };
-
-  const handleRemoveSelected = (option: string) => {
-    onChange(selected.filter(item => item !== option));
+    setOpen(true);
   };
 
   const allSelected = selected.length === options.length;
