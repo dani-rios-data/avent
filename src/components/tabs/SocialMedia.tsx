@@ -1573,20 +1573,6 @@ const SocialMedia = () => {
         </p>
       </div>
 
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-4 shadow-soft">
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-8 h-8 bg-purple-200 rounded-xl flex items-center justify-center">
-            <Instagram className="w-4 h-4 text-purple-700" />
-          </div>
-          <div className="w-8 h-8 bg-pink-200 rounded-xl flex items-center justify-center">
-            <TikTokIcon className="w-4 h-4 text-pink-700" />
-          </div>
-          <h2 className="text-lg font-bold text-purple-800 text-center tracking-wide">
-            Social Media Analysis
-          </h2>
-        </div>
-      </div>
-
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-white to-gray-50 shadow-soft rounded-2xl p-1 border border-gray-200">
