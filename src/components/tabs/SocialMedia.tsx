@@ -1456,31 +1456,31 @@ const SocialMedia = () => {
               <div className="mb-4 text-center">
                 <span className="inline-flex items-center gap-2 bg-[#00f2ea]/10 text-[#00f2ea] text-sm font-semibold px-4 py-2 rounded-full border border-[#00f2ea]/20">
                   <TikTokIcon className="w-4 h-4 text-[#00f2ea]" />
-                  Ranked by Likes
+                  Ranked by Views
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(ttData || [])
                   .filter(row => row && (tiktokSelectedBrands.length === 0 || tiktokSelectedBrands.includes(row.company)))
-                  .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
+                  .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
                   .slice(0, 9)
                   .map((video, index) => (
                   <div key={index} className="space-y-2">
                   {/* Brand Tag Outside */}
                   <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="bg-gradient-to-r from-[#ff0050] to-[#00f2ea] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                        <span className="text-[#ff0050] text-xs font-bold px-2 py-1 rounded-full bg-[#ff0050]/10 border border-[#ff0050]/20">
                           #{index + 1}
                         </span>
                         <span className="font-bold text-sm text-[#ff0050]">{video.company || 'Unknown'}</span>
-                        <span className="text-xs px-2 py-0.5 bg-[#00f2ea]/10 text-[#00f2ea] rounded-full font-medium">
+                        <span className="text-xs px-2 py-0.5 bg-[#ff0050]/10 text-[#ff0050] rounded-full font-medium">
                           @{video.presence_handle || 'unknown'}
                         </span>
                       </div>
                       <span className="text-xs text-[#ff0050] font-medium">{video.published_date || 'Unknown date'}</span>
                     </div>
 
-                    <div className="bg-gradient-to-br from-[#ff0050]/10 to-[#00f2ea]/10 border border-[#ff0050]/20 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                    <div className="bg-[#00f2ea]/5 border border-[#00f2ea]/20 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
                       {/* Video Embed */}
                       <div className="relative aspect-[9/16] bg-black rounded-t-xl overflow-hidden">
                         {video.post_link ? (
@@ -1503,7 +1503,7 @@ const SocialMedia = () => {
                     </div>
 
                   {/* Content */}
-                  <div className="p-3">
+                  <div className="p-3 bg-[#00f2ea]/5">
                     {/* Message */}
                     <div className="mb-2">
                       <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">{video.message || 'No message available'}</p>
