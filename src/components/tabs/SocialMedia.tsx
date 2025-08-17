@@ -83,6 +83,8 @@ const SocialMedia = () => {
   const [tiktokSelectedYears, setTiktokSelectedYears] = useState<string[]>([]);
   const [tiktokSelectedMonths, setTiktokSelectedMonths] = useState<string[]>([]);
   const [instagramPostTypeSelectedBrands, setInstagramPostTypeSelectedBrands] = useState<string[]>([]);
+  const [instagramPostsSelectedBrands, setInstagramPostsSelectedBrands] = useState<string[]>([]);
+  const [tiktokSelectedBrands, setTiktokSelectedBrands] = useState<string[]>([]);
   
   const { 
     data: instagramData, 
@@ -182,11 +184,11 @@ const SocialMedia = () => {
     };
   }, [instagramData, instagramSelectedYears, instagramSelectedMonths]);
 
-  // Extract unique years and months from TikTok dataset
-  const { tiktokUniqueYears, tiktokUniqueMonths, filteredTikTokData } = useMemo(() => {
+  // Extract unique years, months, and brands from TikTok dataset
+  const { tiktokUniqueYears, tiktokUniqueMonths, tiktokUniqueBrands, filteredTikTokData } = useMemo(() => {
     const ttData = tiktokData as unknown as TikTokDataRow[];
     
-    if (!ttData) return { tiktokUniqueYears: [], tiktokUniqueMonths: [], filteredTikTokData: [] };
+    if (!ttData) return { tiktokUniqueYears: [], tiktokUniqueMonths: [], tiktokUniqueBrands: [], filteredTikTokData: [] };
 
     // Extract years and months from TikTok dataset
     const allDates = ttData.map(row => row.published_date).filter(Boolean);
@@ -225,6 +227,15 @@ const SocialMedia = () => {
     const sortedYears = Array.from(years).sort();
     const sortedMonths = Array.from(months).sort();
 
+    // Extract unique brands
+    const brands = new Set<string>();
+    ttData.forEach(row => {
+      if (row.company) {
+        brands.add(row.company);
+      }
+    });
+    const sortedBrands = Array.from(brands).sort();
+
     // Filter TikTok data based on selected years and months
     const filteredData = ttData.filter(row => {
       if (!row.published_date) return false;
@@ -254,6 +265,7 @@ const SocialMedia = () => {
     return {
       tiktokUniqueYears: sortedYears,
       tiktokUniqueMonths: sortedMonths,
+      tiktokUniqueBrands: sortedBrands,
       filteredTikTokData: filteredData
     };
   }, [tiktokData, tiktokSelectedYears, tiktokSelectedMonths]);
@@ -588,13 +600,13 @@ const SocialMedia = () => {
                   <CardDescription className="text-sm text-gray-600">Distribution of content types</CardDescription>
                 </div>
                 <div className="flex flex-col gap-1 min-w-[150px]">
-                  <label className="text-xs font-medium text-gray-600">Brand</label>
+                  <label className="text-xs font-medium text-gray-600 opacity-80">Company</label>
                   <MultiSelect
-                    options={['All Brands', ...instagramUniqueBrands]}
+                    options={instagramUniqueBrands}
                     selected={instagramPostTypeSelectedBrands}
                     onChange={setInstagramPostTypeSelectedBrands}
-                    placeholder="All Brands"
-                    className="w-full text-xs"
+                    placeholder="All Companies"
+                    className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
                   />
                 </div>
               </div>
@@ -606,7 +618,7 @@ const SocialMedia = () => {
                     <Pie
                       data={(() => {
                         // Filter data by selected brands
-                        const filteredData = instagramPostTypeSelectedBrands.length === 0 || instagramPostTypeSelectedBrands.includes('All Brands')
+                        const filteredData = instagramPostTypeSelectedBrands.length === 0
                           ? igData
                           : igData.filter(row => instagramPostTypeSelectedBrands.includes(row.company));
 
@@ -637,7 +649,7 @@ const SocialMedia = () => {
                         const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                         
                         // Filter data by selected brands (same logic as above)
-                        const filteredData = instagramPostTypeSelectedBrands.length === 0 || instagramPostTypeSelectedBrands.includes('All Brands')
+                        const filteredData = instagramPostTypeSelectedBrands.length === 0
                           ? igData
                           : igData.filter(row => instagramPostTypeSelectedBrands.includes(row.company));
 
@@ -653,16 +665,117 @@ const SocialMedia = () => {
                       })()}
                     </Pie>
                     <Tooltip 
-                      formatter={(value, name, props) => [
-                        `${value} posts (${props.payload?.percentage}%)`,
-                        'Count'
-                      ]}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          
+                          // Get the correct color based on the data index
+                          const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+                          
+                          // Filter data to get the same order as the chart
+                          const filteredData = instagramPostTypeSelectedBrands.length === 0
+                            ? igData
+                            : igData.filter(row => instagramPostTypeSelectedBrands.includes(row.company));
+
+                          const postTypeCount = filteredData.reduce((acc, row) => {
+                            const postType = row.post_type || 'Unknown';
+                            acc[postType] = (acc[postType] || 0) + 1;
+                            return acc;
+                          }, {} as Record<string, number>);
+
+                          const total = Object.values(postTypeCount).reduce((sum, count) => sum + count, 0);
+                          const sortedTypes = Object.entries(postTypeCount)
+                            .map(([type, count]) => ({ name: type, value: count }))
+                            .sort((a, b) => b.value - a.value);
+                          
+                          const currentIndex = sortedTypes.findIndex(item => item.name === data.name);
+                          const segmentColor = colors[currentIndex % colors.length];
+                          
+                          return (
+                            <div className="relative bg-gradient-to-br from-white via-white to-gray-50/50 backdrop-blur-lg border border-gray-200/60 rounded-2xl shadow-2xl p-5 min-w-[180px] max-w-[220px] transform transition-all duration-300 ease-out">
+                              {/* Subtle inner glow */}
+                              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+                              
+                              {/* Header with icon and title */}
+                              <div className="relative flex items-center gap-3 mb-3">
+                                <div className="relative">
+                                  <div 
+                                    className="w-4 h-4 rounded-full shadow-sm ring-2 ring-white/80"
+                                    style={{ backgroundColor: segmentColor }}
+                                  />
+                                  <div 
+                                    className="absolute inset-0 w-4 h-4 rounded-full opacity-30 animate-pulse"
+                                    style={{ backgroundColor: segmentColor }}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-bold text-gray-800 text-sm leading-tight">{data.name}</p>
+                                  <p className="text-gray-500 text-xs font-medium">Post Type</p>
+                                </div>
+                              </div>
+                              
+                              {/* Divider */}
+                              <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-3" />
+                              
+                              {/* Metrics */}
+                              <div className="relative space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-600 text-xs font-medium">Posts Count</span>
+                                  <div className="flex items-center gap-1">
+                                    <div 
+                                      className="w-1.5 h-1.5 rounded-full" 
+                                      style={{ backgroundColor: segmentColor }}
+                                    />
+                                    <span className="font-bold text-gray-800 text-sm">{data.value.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-600 text-xs font-medium">Percentage</span>
+                                  <div className="flex items-center gap-1">
+                                    <div 
+                                      className="w-1.5 h-1.5 rounded-full" 
+                                      style={{ backgroundColor: segmentColor }}
+                                    />
+                                    <span 
+                                      className="font-bold text-sm"
+                                      style={{ color: segmentColor }}
+                                    >
+                                      {data.percentage}%
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                {/* Progress bar */}
+                                <div className="mt-3">
+                                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className="h-full rounded-full transition-all duration-500 ease-out"
+                                      style={{ 
+                                        backgroundColor: segmentColor,
+                                        width: `${data.percentage}%` 
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Bottom accent */}
+                              <div 
+                                className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full opacity-60"
+                                style={{ backgroundColor: segmentColor }}
+                              />
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
                     <Legend 
                       verticalAlign="bottom" 
                       height={36}
                       formatter={(value) => (
-                        <span style={{ fontSize: '12px' }}>{value}</span>
+                        <span style={{ fontSize: '12px', color: '#4B5563' }}>{value}</span>
                       )}
                     />
                   </PieChart>
@@ -676,47 +789,132 @@ const SocialMedia = () => {
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-semibold text-gray-800">Instagram Posts Performance</CardTitle>
             <CardDescription className="text-sm text-gray-600">Recent posts and their engagement metrics</CardDescription>
+            
+            {/* Brand Selector */}
+            <div className="mt-4 bg-warm-cream border-border shadow-soft rounded-2xl p-3">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-foreground">Brand:</label>
+                <div className="max-w-xs">
+                  <MultiSelect
+                    options={instagramUniqueBrands}
+                    selected={instagramPostsSelectedBrands}
+                    onChange={setInstagramPostsSelectedBrands}
+                    placeholder="All Brands"
+                    className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
+                  />
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {igData.slice(0, 10).map((post, index) => (
-                <div key={index} className="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-xl p-4 hover:shadow-soft transition-all duration-200">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-sm text-pink-800">{post.company}</p>
-                        <span className="text-xs px-2 py-0.5 bg-pink-200 text-pink-700 rounded-full font-medium">
-                          @{post.presence_handle}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 mt-2 line-clamp-2 leading-relaxed">{post.message}</p>
-                    </div>
-                    <div className="text-right ml-4 space-y-1">
-                      <div className="flex items-center gap-1 text-sm font-medium text-purple-700">
-                        <TrendingUp className="w-3 h-3" />
-                        {formatNumber(post.engagement_total)} engagements
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-red-600">
-                        <Heart className="w-3 h-3" />
-                        {formatNumber(post.likes)} likes
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-green-600">
-                        <Users className="w-3 h-3" />
-                        {(post.engagement_rate_by_follower * 100).toFixed(2)}%
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mt-3 pt-2 border-t border-pink-200">
-                    <span className="text-xs text-pink-600 font-medium">{post.published_date}</span>
-                    <div className="flex items-center gap-1 text-xs">
-                      <Users className="w-3 h-3 text-green-600" />
-                      <span className="text-green-700 font-medium">
-                        {(post.engagement_rate_by_follower * 100).toFixed(2)}% engagement
+            {/* Ranking Label */}
+            <div className="mb-4 text-center">
+              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-100 to-rose-100 text-pink-800 text-sm font-semibold px-4 py-2 rounded-full border border-pink-200">
+                <Heart className="w-4 h-4" />
+                Ranked by Likes
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(igData || [])
+                .filter(row => row && (instagramPostsSelectedBrands.length === 0 || instagramPostsSelectedBrands.includes(row.company)))
+                .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
+                .slice(0, 9)
+                .map((post, index) => (
+                <div key={index} className="space-y-2">
+                  {/* Brand Tag Outside */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                        #{index + 1}
+                      </span>
+                      <span className="font-bold text-sm text-pink-800">{post.company || 'Unknown'}</span>
+                      <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-700 rounded-full font-medium">
+                        @{post.presence_handle || 'unknown'}
                       </span>
                     </div>
+                    <span className="text-xs text-pink-600 font-medium">{post.published_date || 'Unknown date'}</span>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                    {/* Post Embed */}
+                    <div className="relative aspect-square bg-gradient-to-br from-pink-100 to-rose-200 rounded-t-xl overflow-hidden">
+                      {post.post_link ? (
+                        <iframe
+                          src={`${post.post_link}embed/`}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          scrolling="no"
+                          allowTransparency={true}
+                          title={`Instagram post by ${post.presence_handle}`}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-pink-100 to-rose-200 flex items-center justify-center">
+                          <div className="text-center">
+                            <Instagram className="w-12 h-12 text-pink-400 mx-auto mb-2" />
+                            <p className="text-pink-600 text-sm font-medium">Post not available</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  
+                  {/* Content */}
+                  <div className="p-3">
+                    {/* Message */}
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">{post.message || 'No message available'}</p>
+                    </div>
+                    
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="flex items-center gap-1 text-xs">
+                        <Heart className="w-3 h-3 text-rose-600" />
+                        <span className="text-rose-700 font-medium">{formatNumber(post.likes)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <MessageCircle className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-700 font-medium">{formatNumber(post.comments)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Eye className="w-3 h-3 text-purple-600" />
+                        <span className="text-purple-700 font-medium">{formatNumber(post.estimated_impressions)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <TrendingUp className="w-3 h-3 text-indigo-600" />
+                        <span className="text-indigo-700 font-medium">{formatNumber(post.engagement_total)}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Footer metrics */}
+                    <div className="flex items-center justify-between pt-2 border-t border-pink-200/50">
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <Users className="w-3 h-3" />
+                        <span>{formatNumber(post.followers)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-pink-600">
+                        <span className="font-bold">{(post.engagement_rate_by_follower * 100).toFixed(1)}%</span>
+                      </div>
+                    </div>
+                    
+                    {/* Link to Instagram */}
+                    {post.post_link && (
+                      <div className="mt-2">
+                        <a 
+                          href={post.post_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-pink-600 hover:text-pink-800 font-medium transition-colors duration-200"
+                        >
+                          <span>View on Instagram</span>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         </Card>
@@ -937,26 +1135,282 @@ const SocialMedia = () => {
                   const maxViews = sortedCompanies[0]?.[1] || 1;
 
                   return (
-                    <div className="space-y-3">
-                      {sortedCompanies.map(([company, views], index) => (
-                        <div key={company} className="flex items-center gap-3">
+                    <div className="space-y-3 pt-12">
+                      {sortedCompanies.map(([company, views], index) => {
+                        const videoCount = ttData.filter(row => row.company === company).length;
+                        const totalLikes = ttData.filter(row => row.company === company).reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
+                        
+                        return (
+                          <div key={company} className="flex items-center gap-3 group">
+                            <div className="w-6 text-xs font-medium text-gray-500 text-right">
+                              #{index + 1}
+                            </div>
+                            <div className="flex-1 relative">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
+                                  {company}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {formatNumber(views)}
+                                </span>
+                              </div>
+                              <div 
+                                className="w-full bg-gray-200 rounded-full h-2 cursor-pointer relative"
+                                onMouseEnter={(e) => {
+                                  const tooltip = e.currentTarget.querySelector('.custom-tooltip') as HTMLElement;
+                                  if (tooltip) {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    tooltip.style.display = 'block';
+                                    tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                                    tooltip.style.top = `${rect.top}px`;
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  const tooltip = e.currentTarget.querySelector('.custom-tooltip') as HTMLElement;
+                                  if (tooltip) tooltip.style.display = 'none';
+                                }}
+                              >
+                                <div 
+                                  className="bg-violet-500 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${(views / maxViews) * 100}%` }}
+                                />
+                                <div 
+                                  className="custom-tooltip fixed bg-gradient-to-br from-white via-white to-gray-50/50 backdrop-blur-lg border border-gray-200/60 rounded-2xl shadow-2xl p-5 min-w-[200px] max-w-[250px] transform transition-all duration-300 ease-out pointer-events-none"
+                                  style={{ 
+                                    display: 'none', 
+                                    zIndex: 99999,
+                                    transform: 'translate(-50%, -100%)',
+                                    marginTop: '-8px'
+                                  }}
+                                >
+                                  {/* Subtle inner glow */}
+                                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+                                  
+                                  {/* Header with icon and title */}
+                                  <div className="relative flex items-center gap-3 mb-3">
+                                    <div className="relative">
+                                      <div className="w-4 h-4 rounded-full bg-violet-500 shadow-sm ring-2 ring-white/80" />
+                                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-violet-500 opacity-30 animate-pulse" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="font-bold text-gray-800 text-sm leading-tight">{company}</p>
+                                      <p className="text-gray-500 text-xs font-medium">TikTok Brand</p>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Divider */}
+                                  <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-3" />
+                                  
+                                  {/* Metrics */}
+                                  <div className="relative space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-gray-600 text-xs font-medium">Total Views</span>
+                                      <div className="flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                                        <span className="font-bold text-gray-800 text-sm">{formatNumber(views)}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-gray-600 text-xs font-medium">Total Videos</span>
+                                      <div className="flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                                        <span className="font-bold text-cyan-600 text-sm">{videoCount.toLocaleString()}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-gray-600 text-xs font-medium">Total Likes</span>
+                                      <div className="flex items-center gap-1">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                        <span className="font-bold text-rose-600 text-sm">{formatNumber(totalLikes)}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Progress bar */}
+                                    <div className="mt-3">
+                                      <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                        <div 
+                                          className="h-full rounded-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-500 ease-out"
+                                          style={{ width: `${(views / maxViews) * 100}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Bottom accent */}
+                                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-violet-200 to-transparent rounded-full" />
+                                  
+                                  {/* Arrow */}
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Top Companies by Engagement Rate by Follower - Horizontal Bar Chart */}
+          <Card className="shadow-soft rounded-2xl border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-amber-600" />
+                Top Companies by Engagement Rate by Follower
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-600">Companies ranked by average engagement rate by follower</CardDescription>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="max-h-80 overflow-y-auto overflow-x-visible relative">
+                {(() => {
+                  if (!ttData || ttData.length === 0) return <div className="text-center text-gray-500 py-8">No data available</div>;
+                  
+                  const companyEngagementRate = ttData.reduce((acc, row) => {
+                    const company = row.company;
+                    const engagementRate = Number(row.engagement_rate_by_follower) || 0;
+                    const followers = Number(row.followers) || 0;
+                    
+                    if (!company || engagementRate === 0) return acc;
+                    
+                    if (!acc[company]) {
+                      acc[company] = { 
+                        totalRate: 0, 
+                        count: 0, 
+                        followers: followers
+                      };
+                    }
+                    acc[company].totalRate += engagementRate;
+                    acc[company].count += 1;
+                    if (followers > 0) {
+                      acc[company].followers = followers;
+                    }
+                    
+                    return acc;
+                  }, {} as Record<string, { totalRate: number; count: number; followers: number }>);
+
+                  const sortedCompanies = Object.entries(companyEngagementRate)
+                    .map(([company, data]) => [
+                      company, 
+                      data.totalRate / data.count, 
+                      data.count, 
+                      data.followers
+                    ] as [string, number, number, number])
+                    .filter(([company, avgRate]) => avgRate > 0)
+                    .sort((a, b) => b[1] - a[1]);
+
+                  const maxEngagementRate = sortedCompanies[0]?.[1] || 1;
+
+                  return (
+                    <div className="space-y-3 pt-12">
+                      {sortedCompanies.map(([company, engagementRate, videoCount, followers], index) => (
+                        <div key={company} className="flex items-center gap-3 group">
                           <div className="w-6 text-xs font-medium text-gray-500 text-right">
                             #{index + 1}
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 relative">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]" title={company}>
+                              <span className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
                                 {company}
                               </span>
-                              <span className="text-xs text-gray-500 ml-2">
-                                {formatNumber(views)}
+                              <span className="text-xs text-gray-500">
+                                {(engagementRate * 100).toFixed(2)}%
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="w-full bg-gray-200 rounded-full h-2 cursor-pointer relative"
+                              onMouseEnter={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.custom-tooltip') as HTMLElement;
+                                if (tooltip) {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  tooltip.style.display = 'block';
+                                  tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                                  tooltip.style.top = `${rect.top}px`;
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                const tooltip = e.currentTarget.querySelector('.custom-tooltip') as HTMLElement;
+                                if (tooltip) tooltip.style.display = 'none';
+                              }}
+                            >
                               <div 
-                                className="bg-violet-500 h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${(views / maxViews) * 100}%` }}
+                                className="bg-amber-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(engagementRate / maxEngagementRate) * 100}%` }}
                               />
+                              <div 
+                                className="custom-tooltip fixed bg-gradient-to-br from-white via-white to-gray-50/50 backdrop-blur-lg border border-gray-200/60 rounded-2xl shadow-2xl p-5 min-w-[240px] max-w-[300px] transform transition-all duration-300 ease-out pointer-events-none"
+                                style={{ 
+                                  display: 'none', 
+                                  zIndex: 99999,
+                                  transform: 'translate(-50%, -100%)',
+                                  marginTop: '-8px'
+                                }}
+                              >
+                                {/* Subtle inner glow */}
+                                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+                                
+                                {/* Header with icon and title */}
+                                <div className="relative flex items-center gap-3 mb-3">
+                                  <div className="relative">
+                                    <div className="w-4 h-4 rounded-full bg-amber-500 shadow-sm ring-2 ring-white/80" />
+                                    <div className="absolute inset-0 w-4 h-4 rounded-full bg-amber-500 opacity-30 animate-pulse" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-bold text-gray-800 text-sm leading-tight">{company}</p>
+                                    <p className="text-gray-500 text-xs font-medium">TikTok Brand</p>
+                                  </div>
+                                </div>
+                                
+                                {/* Divider */}
+                                <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-3" />
+                                
+                                {/* Metrics */}
+                                <div className="relative space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-600 text-xs font-medium">Avg Engagement Rate</span>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                      <span className="font-bold text-gray-800 text-sm">{(engagementRate * 100).toFixed(2)}%</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-600 text-xs font-medium">Total Videos</span>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                                      <span className="font-bold text-violet-600 text-sm">{videoCount.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-600 text-xs font-medium">Followers</span>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                      <span className="font-bold text-emerald-600 text-sm">{followers.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Progress bar */}
+                                  <div className="mt-3">
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                      <div 
+                                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500 ease-out"
+                                        style={{ width: `${(engagementRate / maxEngagementRate) * 100}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Bottom accent */}
+                                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-amber-200 to-transparent rounded-full" />
+                                
+                                {/* Arrow */}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200"></div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -967,123 +1421,136 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Post Type Distribution - Donut Chart */}
-          <Card className="shadow-soft rounded-2xl border-gray-200">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Video className="w-5 h-5 text-teal-600" />
-                Post Type Distribution
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-600">Distribution of content types</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div style={{ width: '100%', height: '300px' }}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={(() => {
-                        const postTypeCount = ttData.reduce((acc, row) => {
-                          const postType = row.post_type || 'Unknown';
-                          acc[postType] = (acc[postType] || 0) + 1;
-                          return acc;
-                        }, {} as Record<string, number>);
-
-                        const total = Object.values(postTypeCount).reduce((sum, count) => sum + count, 0);
-
-                        return Object.entries(postTypeCount)
-                          .map(([type, count]) => ({
-                            name: type,
-                            value: count,
-                            percentage: ((count / total) * 100).toFixed(1)
-                          }))
-                          .sort((a, b) => b.value - a.value);
-                      })()}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {(() => {
-                        const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#f472b6', '#ef4444'];
-                        const postTypeCount = ttData.reduce((acc, row) => {
-                          const postType = row.post_type || 'Unknown';
-                          acc[postType] = (acc[postType] || 0) + 1;
-                          return acc;
-                        }, {} as Record<string, number>);
-
-                        return Object.keys(postTypeCount).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                        ));
-                      })()}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name, props) => [
-                        `${value} videos (${props.payload?.percentage}%)`,
-                        'Count'
-                      ]}
-                    />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={36}
-                      formatter={(value) => (
-                        <span style={{ fontSize: '12px' }}>{value}</span>
-                      )}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <Card className="shadow-soft rounded-2xl border-gray-200">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-semibold text-gray-800">TikTok Videos Performance</CardTitle>
             <CardDescription className="text-sm text-gray-600">Recent videos and their engagement metrics</CardDescription>
+            
+            {/* Brand Selector */}
+            <div className="mt-4 bg-warm-cream border-border shadow-soft rounded-2xl p-3">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-foreground">Brand:</label>
+                <div className="max-w-xs">
+                  <MultiSelect
+                    options={tiktokUniqueBrands}
+                    selected={tiktokSelectedBrands}
+                    onChange={setTiktokSelectedBrands}
+                    placeholder="All Brands"
+                    className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
+                  />
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {ttData.slice(0, 10).map((video, index) => (
-                <div key={index} className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-xl p-4 hover:shadow-soft transition-all duration-200">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold text-sm text-violet-800">{video.company}</p>
-                        <span className="text-xs px-2 py-0.5 bg-violet-200 text-violet-700 rounded-full font-medium">
-                          @{video.presence_handle}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 mt-2 line-clamp-2 leading-relaxed">{video.message}</p>
-                    </div>
-                    <div className="text-right ml-4 space-y-1">
-                      <div className="flex items-center gap-1 text-sm font-medium text-cyan-700">
-                        <Eye className="w-3 h-3" />
-                        {formatNumber(video.views)} views
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-rose-600">
-                        <Heart className="w-3 h-3" />
-                        {formatNumber(video.likes)} likes
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-amber-600">
-                        <TrendingUp className="w-3 h-3" />
-                        {(video.engagement_rate_by_view * 100).toFixed(2)}%
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center mt-3 pt-2 border-t border-violet-200">
-                    <span className="text-xs text-violet-600 font-medium">{video.published_date}</span>
-                    <div className="flex items-center gap-1 text-xs">
-                      <TrendingUp className="w-3 h-3 text-amber-600" />
-                      <span className="text-amber-700 font-medium">
-                        {(video.engagement_rate_by_view * 100).toFixed(2)}% engagement
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(ttData || [])
+                .filter(row => row && (tiktokSelectedBrands.length === 0 || tiktokSelectedBrands.includes(row.company)))
+                .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
+                .slice(0, 9)
+                .map((video, index) => (
+                <div key={index} className="space-y-2">
+                  {/* Brand Tag Outside */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                        #{index + 1}
+                      </span>
+                      <span className="font-bold text-sm text-violet-800">{video.company || 'Unknown'}</span>
+                      <span className="text-xs px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-medium">
+                        @{video.presence_handle || 'unknown'}
                       </span>
                     </div>
+                    <span className="text-xs text-violet-600 font-medium">{video.published_date || 'Unknown date'}</span>
+                  </div>
+                  
+                  <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                    {/* Video Embed */}
+                    <div className="relative aspect-[9/16] bg-black rounded-t-xl overflow-hidden">
+                      {video.post_link ? (
+                        <iframe
+                          src={`https://www.tiktok.com/embed/v2/${video.post_link.split('/').pop()}`}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title={`TikTok video by ${video.presence_handle}`}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-violet-100 to-purple-200 flex items-center justify-center">
+                          <div className="text-center">
+                            <Video className="w-12 h-12 text-violet-400 mx-auto mb-2" />
+                            <p className="text-violet-600 text-sm font-medium">Video not available</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  
+                  {/* Content */}
+                  <div className="p-3">
+                    {/* Message */}
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">{video.message || 'No message available'}</p>
+                    </div>
+                    
+                    {/* Metrics Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="flex items-center gap-1 text-xs">
+                        <Eye className="w-3 h-3 text-cyan-600" />
+                        <span className="text-cyan-700 font-medium">{formatNumber(video.views)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Heart className="w-3 h-3 text-rose-600" />
+                        <span className="text-rose-700 font-medium">{formatNumber(video.likes)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <MessageCircle className="w-3 h-3 text-blue-600" />
+                        <span className="text-blue-700 font-medium">{formatNumber(video.comments)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <Share2 className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-700 font-medium">{formatNumber(video.shares)}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Footer metrics */}
+                    <div className="flex items-center justify-between pt-2 border-t border-violet-200/50">
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <Users className="w-3 h-3" />
+                        <span>{formatNumber(video.followers)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-xs text-purple-600">
+                          <TrendingUp className="w-3 h-3" />
+                          <span className="font-medium">{formatNumber(video.engagement_total)}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-amber-600">
+                          <span className="font-bold">{(video.engagement_rate_by_follower * 100).toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Link to TikTok */}
+                    {video.post_link && (
+                      <div className="mt-2">
+                        <a 
+                          href={video.post_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors duration-200"
+                        >
+                          <span>View on TikTok</span>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
+                ))}
             </div>
           </CardContent>
         </Card>
