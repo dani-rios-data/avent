@@ -1430,7 +1430,7 @@ const SocialMedia = () => {
         <Card className="shadow-soft rounded-2xl border-gray-200">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <TikTokIcon className="w-5 h-5 text-[#00f2ea]" />
+              <TikTokIcon className="w-5 h-5 text-[#ff0050]" />
               TikTok Videos Performance
             </CardTitle>
             <CardDescription className="text-sm text-gray-600">Recent videos and their engagement metrics</CardDescription>
