@@ -1112,7 +1112,7 @@ const SocialMedia = () => {
           <Card className="shadow-soft rounded-2xl border-gray-200">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-violet-600" />
+                <BarChart3 className="w-5 h-5 text-[#ff0050]" />
                 Top Companies by Views
               </CardTitle>
               <CardDescription className="text-sm text-gray-600">Companies ranked by total views</CardDescription>
@@ -1175,7 +1175,7 @@ const SocialMedia = () => {
                                 }}
                               >
                                 <div 
-                                  className="bg-violet-500 h-2 rounded-full transition-all duration-300"
+                                  className="bg-[#ff0050] h-2 rounded-full transition-all duration-300"
                                   style={{ width: `${(views / maxViews) * 100}%` }}
                                 />
                                 <div 
@@ -1193,8 +1193,8 @@ const SocialMedia = () => {
                                   {/* Header with icon and title */}
                                   <div className="relative flex items-center gap-3 mb-3">
                                     <div className="relative">
-                                      <div className="w-4 h-4 rounded-full bg-violet-500 shadow-sm ring-2 ring-white/80" />
-                                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-violet-500 opacity-30 animate-pulse" />
+                                      <div className="w-4 h-4 rounded-full bg-[#ff0050] shadow-sm ring-2 ring-white/80" />
+                                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-[#ff0050] opacity-30 animate-pulse" />
                                     </div>
                                     <div className="flex-1">
                                       <p className="font-bold text-gray-800 text-sm leading-tight">{company}</p>
@@ -1210,7 +1210,7 @@ const SocialMedia = () => {
                                     <div className="flex items-center justify-between">
                                       <span className="text-gray-600 text-xs font-medium">Total Views</span>
                                       <div className="flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#ff0050]" />
                                         <span className="font-bold text-gray-800 text-sm">{formatNumber(views)}</span>
                                       </div>
                                     </div>
@@ -1235,7 +1235,7 @@ const SocialMedia = () => {
                                     <div className="mt-3">
                                       <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                                         <div 
-                                          className="h-full rounded-full bg-gradient-to-r from-violet-400 to-purple-500 transition-all duration-500 ease-out"
+                                          className="h-full rounded-full bg-[#ff0050] transition-all duration-500 ease-out"
                                           style={{ width: `${(views / maxViews) * 100}%` }}
                                         />
                                       </div>
@@ -1243,7 +1243,7 @@ const SocialMedia = () => {
                                   </div>
                                   
                                   {/* Bottom accent */}
-                                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-violet-200 to-transparent rounded-full" />
+                                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-[#ff0050]/20 to-transparent rounded-full" />
                                   
                                   {/* Arrow */}
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200"></div>
@@ -1264,7 +1264,7 @@ const SocialMedia = () => {
           <Card className="shadow-soft rounded-2xl border-gray-200">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-amber-600" />
+                <BarChart3 className="w-5 h-5 text-[#00f2ea]" />
                 Top Companies by Engagement Rate by Follower
               </CardTitle>
               <CardDescription className="text-sm text-gray-600">Companies ranked by average engagement rate by follower</CardDescription>
@@ -1342,7 +1342,7 @@ const SocialMedia = () => {
                               }}
                             >
                               <div 
-                                className="bg-amber-500 h-2 rounded-full transition-all duration-300"
+                                  className="bg-[#00f2ea] h-2 rounded-full transition-all duration-300"
                                 style={{ width: `${(engagementRate / maxEngagementRate) * 100}%` }}
                               />
                               <div 
@@ -1360,8 +1360,8 @@ const SocialMedia = () => {
                                 {/* Header with icon and title */}
                                 <div className="relative flex items-center gap-3 mb-3">
                                   <div className="relative">
-                                    <div className="w-4 h-4 rounded-full bg-amber-500 shadow-sm ring-2 ring-white/80" />
-                                    <div className="absolute inset-0 w-4 h-4 rounded-full bg-amber-500 opacity-30 animate-pulse" />
+                                      <div className="w-4 h-4 rounded-full bg-[#00f2ea] shadow-sm ring-2 ring-white/80" />
+                                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-[#00f2ea] opacity-30 animate-pulse" />
                                   </div>
                                   <div className="flex-1">
                                     <p className="font-bold text-gray-800 text-sm leading-tight">{company}</p>
@@ -1377,7 +1377,7 @@ const SocialMedia = () => {
                                   <div className="flex items-center justify-between">
                                     <span className="text-gray-600 text-xs font-medium">Avg Engagement Rate</span>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#00f2ea]" />
                                       <span className="font-bold text-gray-800 text-sm">{(engagementRate * 100).toFixed(2)}%</span>
                                     </div>
                                   </div>
@@ -1385,8 +1385,8 @@ const SocialMedia = () => {
                                   <div className="flex items-center justify-between">
                                     <span className="text-gray-600 text-xs font-medium">Total Videos</span>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-                                      <span className="font-bold text-violet-600 text-sm">{videoCount.toLocaleString()}</span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#ff0050]" />
+                                        <span className="font-bold text-[#ff0050] text-sm">{videoCount.toLocaleString()}</span>
                                     </div>
                                   </div>
                                   
@@ -1402,7 +1402,7 @@ const SocialMedia = () => {
                                   <div className="mt-3">
                                     <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                                       <div 
-                                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500 ease-out"
+                                          className="h-full rounded-full bg-[#00f2ea] transition-all duration-500 ease-out"
                                         style={{ width: `${(engagementRate / maxEngagementRate) * 100}%` }}
                                       />
                                     </div>
@@ -1410,7 +1410,7 @@ const SocialMedia = () => {
                                 </div>
                                 
                                 {/* Bottom accent */}
-                                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-amber-200 to-transparent rounded-full" />
+                                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-[#00f2ea]/20 to-transparent rounded-full" />
                                 
                                 {/* Arrow */}
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200"></div>
