@@ -1448,8 +1448,8 @@ const SocialMedia = () => {
             <CardContent>
               {/* Ranking Label */}
               <div className="mb-4 text-center">
-                <span className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ff0050]/10 to-[#00f2ea]/10 text-[#ff0050] text-sm font-semibold px-4 py-2 rounded-full border border-[#ff0050]/20">
-                  <Heart className="w-4 h-4 text-[#ff0050]" />
+                <span className="inline-flex items-center gap-2 bg-[#00f2ea]/10 text-[#00f2ea] text-sm font-semibold px-4 py-2 rounded-full border border-[#00f2ea]/20">
+                  <TikTokIcon className="w-4 h-4 text-[#00f2ea]" />
                   Ranked by Likes
                 </span>
               </div>
