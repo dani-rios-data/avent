@@ -1445,50 +1445,57 @@ const SocialMedia = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(ttData || [])
-                .filter(row => row && (tiktokSelectedBrands.length === 0 || tiktokSelectedBrands.includes(row.company)))
-                .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
-                .slice(0, 9)
-                .map((video, index) => (
-                <div key={index} className="space-y-2">
+            <CardContent>
+              {/* Ranking Label */}
+              <div className="mb-4 text-center">
+                <span className="inline-flex items-center gap-2 bg-gradient-to-r from-[#ff0050]/10 to-[#00f2ea]/10 text-[#ff0050] text-sm font-semibold px-4 py-2 rounded-full border border-[#ff0050]/20">
+                  <Heart className="w-4 h-4 text-[#ff0050]" />
+                  Ranked by Likes
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(ttData || [])
+                  .filter(row => row && (tiktokSelectedBrands.length === 0 || tiktokSelectedBrands.includes(row.company)))
+                  .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
+                  .slice(0, 9)
+                  .map((video, index) => (
+                  <div key={index} className="space-y-2">
                   {/* Brand Tag Outside */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-                        #{index + 1}
-                      </span>
-                      <span className="font-bold text-sm text-violet-800">{video.company || 'Unknown'}</span>
-                      <span className="text-xs px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full font-medium">
-                        @{video.presence_handle || 'unknown'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-gradient-to-r from-[#ff0050] to-[#00f2ea] text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
+                          #{index + 1}
+                        </span>
+                        <span className="font-bold text-sm text-[#ff0050]">{video.company || 'Unknown'}</span>
+                        <span className="text-xs px-2 py-0.5 bg-[#00f2ea]/10 text-[#00f2ea] rounded-full font-medium">
+                          @{video.presence_handle || 'unknown'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-[#ff0050] font-medium">{video.published_date || 'Unknown date'}</span>
                     </div>
-                    <span className="text-xs text-violet-600 font-medium">{video.published_date || 'Unknown date'}</span>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
-                    {/* Video Embed */}
-                    <div className="relative aspect-[9/16] bg-black rounded-t-xl overflow-hidden">
-                      {video.post_link ? (
-                        <iframe
-                          src={`https://www.tiktok.com/embed/v2/${video.post_link.split('/').pop()}`}
+
+                    <div className="bg-gradient-to-br from-[#ff0050]/10 to-[#00f2ea]/10 border border-[#ff0050]/20 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                      {/* Video Embed */}
+                      <div className="relative aspect-[9/16] bg-black rounded-t-xl overflow-hidden">
+                        {video.post_link ? (
+                          <iframe
+                            src={`https://www.tiktok.com/embed/v2/${video.post_link.split('/').pop()}`}
                           className="w-full h-full"
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                           title={`TikTok video by ${video.presence_handle}`}
                         />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-violet-100 to-purple-200 flex items-center justify-center">
+                        ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#ff0050]/20 to-[#00f2ea]/20 flex items-center justify-center">
                           <div className="text-center">
-                            <Video className="w-12 h-12 text-violet-400 mx-auto mb-2" />
-                            <p className="text-violet-600 text-sm font-medium">Video not available</p>
+                            <Video className="w-12 h-12 text-[#ff0050] mx-auto mb-2" />
+                            <p className="text-[#ff0050] text-sm font-medium">Video not available</p>
                           </div>
                         </div>
                       )}
                     </div>
-                  
+
                   {/* Content */}
                   <div className="p-3">
                     {/* Message */}
@@ -1499,48 +1506,48 @@ const SocialMedia = () => {
                     {/* Metrics Grid */}
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <div className="flex items-center gap-1 text-xs">
-                        <Eye className="w-3 h-3 text-cyan-600" />
-                        <span className="text-cyan-700 font-medium">{formatNumber(video.views)}</span>
+                        <Eye className="w-3 h-3 text-[#00f2ea]" />
+                        <span className="text-[#00f2ea] font-medium">{formatNumber(video.views)}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Heart className="w-3 h-3 text-rose-600" />
-                        <span className="text-rose-700 font-medium">{formatNumber(video.likes)}</span>
+                        <Heart className="w-3 h-3 text-[#ff0050]" />
+                        <span className="text-[#ff0050] font-medium">{formatNumber(video.likes)}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <MessageCircle className="w-3 h-3 text-blue-600" />
-                        <span className="text-blue-700 font-medium">{formatNumber(video.comments)}</span>
+                        <MessageCircle className="w-3 h-3 text-gray-600" />
+                        <span className="text-gray-700 font-medium">{formatNumber(video.comments)}</span>
                       </div>
                       <div className="flex items-center gap-1 text-xs">
-                        <Share2 className="w-3 h-3 text-emerald-600" />
-                        <span className="text-emerald-700 font-medium">{formatNumber(video.shares)}</span>
+                        <Share2 className="w-3 h-3 text-black" />
+                        <span className="text-black font-medium">{formatNumber(video.shares)}</span>
                       </div>
                     </div>
-                    
+
                     {/* Footer metrics */}
-                    <div className="flex items-center justify-between pt-2 border-t border-violet-200/50">
+                    <div className="flex items-center justify-between pt-2 border-t border-[#ff0050]/20">
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <Users className="w-3 h-3" />
                         <span>{formatNumber(video.followers)}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-xs text-purple-600">
+                        <div className="flex items-center gap-1 text-xs text-[#00f2ea]">
                           <TrendingUp className="w-3 h-3" />
                           <span className="font-medium">{formatNumber(video.engagement_total)}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-amber-600">
+                        <div className="flex items-center gap-1 text-xs text-[#ff0050]">
                           <span className="font-bold">{(video.engagement_rate_by_follower * 100).toFixed(1)}%</span>
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Link to TikTok */}
                     {video.post_link && (
                       <div className="mt-2">
-                        <a 
-                          href={video.post_link} 
-                          target="_blank" 
+                        <a
+                          href={video.post_link}
+                          target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 font-medium transition-colors duration-200"
+                          className="inline-flex items-center gap-1 text-xs text-[#ff0050] hover:text-[#00f2ea] font-medium transition-colors duration-200"
                         >
                           <span>View on TikTok</span>
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
