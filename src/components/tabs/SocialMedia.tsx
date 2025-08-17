@@ -787,7 +787,10 @@ const SocialMedia = () => {
 
         <Card className="shadow-soft rounded-2xl border-gray-200">
           <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold text-gray-800">Instagram Posts Performance</CardTitle>
+            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <Instagram className="w-5 h-5 text-pink-600" />
+              Instagram Posts Performance
+            </CardTitle>
             <CardDescription className="text-sm text-gray-600">Recent posts and their engagement metrics</CardDescription>
             
             {/* Brand Selector */}
