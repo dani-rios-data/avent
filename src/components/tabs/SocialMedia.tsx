@@ -914,11 +914,12 @@ const SocialMedia = () => {
                     )}
                   </div>
                 </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
     );
   };
 
@@ -1550,7 +1551,8 @@ const SocialMedia = () => {
                     )}
                   </div>
                 </div>
-                ))}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
