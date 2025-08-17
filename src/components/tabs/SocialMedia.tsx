@@ -794,19 +794,15 @@ const SocialMedia = () => {
             <CardDescription className="text-sm text-gray-600">Recent posts and their engagement metrics</CardDescription>
             
             {/* Brand Selector */}
-            <div className="mt-4 bg-warm-cream border-border shadow-soft rounded-2xl p-3">
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-foreground">Brand:</label>
-                <div className="max-w-xs">
-                  <MultiSelect
-                    options={instagramUniqueBrands}
-                    selected={instagramPostsSelectedBrands}
-                    onChange={setInstagramPostsSelectedBrands}
-                    placeholder="All Brands"
-                    className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
-                  />
-                </div>
-              </div>
+            <div className="mt-4 flex flex-col gap-1 max-w-xs">
+              <label className="text-xs font-medium text-foreground">Brand</label>
+              <MultiSelect
+                options={instagramUniqueBrands}
+                selected={instagramPostsSelectedBrands}
+                onChange={setInstagramPostsSelectedBrands}
+                placeholder="All Brands"
+                className="w-full"
+              />
             </div>
           </CardHeader>
           <CardContent>
@@ -1436,19 +1432,15 @@ const SocialMedia = () => {
             <CardDescription className="text-sm text-gray-600">Recent videos and their engagement metrics</CardDescription>
             
             {/* Brand Selector */}
-            <div className="mt-4 bg-warm-cream border-border shadow-soft rounded-2xl p-3">
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-foreground">Brand:</label>
-                <div className="max-w-xs">
-                  <MultiSelect
-                    options={tiktokUniqueBrands}
-                    selected={tiktokSelectedBrands}
-                    onChange={setTiktokSelectedBrands}
-                    placeholder="All Brands"
-                    className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
-                  />
-                </div>
-              </div>
+            <div className="mt-4 flex flex-col gap-1 max-w-xs">
+              <label className="text-xs font-medium text-foreground">Brand</label>
+              <MultiSelect
+                options={tiktokUniqueBrands}
+                selected={tiktokSelectedBrands}
+                onChange={setTiktokSelectedBrands}
+                placeholder="All Brands"
+                className="w-full"
+              />
             </div>
           </CardHeader>
             <CardContent>
