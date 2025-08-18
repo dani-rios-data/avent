@@ -359,11 +359,11 @@ const SocialMedia = () => {
 
         {/* Top Row - 4 metrics centered */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-pink-50 to-pink-100 border-pink-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-pink-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-pink-600 capitalize tracking-wide">Total Posts</p>
+                  <p className="text-sm font-medium text-pink-600 capitalize tracking-wide">Posts</p>
                   <p className="text-2xl font-bold text-pink-800 tracking-tight">{igData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-pink-200 rounded-xl flex items-center justify-center">
@@ -373,11 +373,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-red-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-red-600 capitalize tracking-wide">Total Likes</p>
+                  <p className="text-sm font-medium text-red-600 capitalize tracking-wide">Likes</p>
                   <p className="text-2xl font-bold text-red-800 tracking-tight">{formatNumber(totalLikes)}</p>
                 </div>
                 <div className="w-10 h-10 bg-red-200 rounded-xl flex items-center justify-center">
@@ -387,11 +387,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-blue-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-blue-600 capitalize tracking-wide">Total Comments</p>
+                  <p className="text-sm font-medium text-blue-600 capitalize tracking-wide">Comments</p>
                   <p className="text-2xl font-bold text-blue-800 tracking-tight">{formatNumber(totalComments)}</p>
                 </div>
                 <div className="w-10 h-10 bg-blue-200 rounded-xl flex items-center justify-center">
@@ -401,11 +401,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-green-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-green-600 capitalize tracking-wide">Total Impressions</p>
+                  <p className="text-sm font-medium text-green-600 capitalize tracking-wide">Impressions</p>
                   <p className="text-2xl font-bold text-green-800 tracking-tight">{formatNumber(totalImpressions)}</p>
                 </div>
                 <div className="w-10 h-10 bg-green-200 rounded-xl flex items-center justify-center">
@@ -418,7 +418,7 @@ const SocialMedia = () => {
 
         {/* Bottom Row - 4 metrics centered */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -432,11 +432,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Total Engagement</p>
+                  <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Engagement</p>
                   <p className="text-2xl font-bold text-indigo-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
                 </div>
                 <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
@@ -446,7 +446,7 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-orange-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -460,7 +460,7 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-teal-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -987,11 +987,11 @@ const SocialMedia = () => {
 
         {/* Top Row - 4 metrics centered */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-violet-50 to-violet-100 border-violet-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-violet-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-violet-600 capitalize tracking-wide">Total Videos</p>
+                  <p className="text-sm font-medium text-violet-600 capitalize tracking-wide">Videos</p>
                   <p className="text-2xl font-bold text-violet-800 tracking-tight">{ttData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-violet-200 rounded-xl flex items-center justify-center">
@@ -1001,11 +1001,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-cyan-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-cyan-600 capitalize tracking-wide">Total Views</p>
+                  <p className="text-sm font-medium text-cyan-600 capitalize tracking-wide">Views</p>
                   <p className="text-2xl font-bold text-cyan-800 tracking-tight">{formatNumber(totalViews)}</p>
                 </div>
                 <div className="w-10 h-10 bg-cyan-200 rounded-xl flex items-center justify-center">
@@ -1015,11 +1015,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-rose-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-rose-600 capitalize tracking-wide">Total Likes</p>
+                  <p className="text-sm font-medium text-rose-600 capitalize tracking-wide">Likes</p>
                   <p className="text-2xl font-bold text-rose-800 tracking-tight">{formatNumber(totalLikes)}</p>
                 </div>
                 <div className="w-10 h-10 bg-rose-200 rounded-xl flex items-center justify-center">
@@ -1029,11 +1029,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Total Comments</p>
+                  <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Comments</p>
                   <p className="text-2xl font-bold text-indigo-800 tracking-tight">{formatNumber(totalComments)}</p>
                 </div>
                 <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
@@ -1046,11 +1046,11 @@ const SocialMedia = () => {
 
         {/* Bottom Row - 4 metrics centered */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-emerald-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-emerald-600 capitalize tracking-wide">Total Shares</p>
+                  <p className="text-sm font-medium text-emerald-600 capitalize tracking-wide">Shares</p>
                   <p className="text-2xl font-bold text-emerald-800 tracking-tight">{formatNumber(totalShares)}</p>
                 </div>
                 <div className="w-10 h-10 bg-emerald-200 rounded-xl flex items-center justify-center">
@@ -1060,7 +1060,7 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-amber-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -1074,11 +1074,11 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Total Engagement</p>
+                  <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Engagement</p>
                   <p className="text-2xl font-bold text-purple-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
                 </div>
                 <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
@@ -1088,7 +1088,7 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-teal-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
