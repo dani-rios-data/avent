@@ -83,8 +83,8 @@ const SocialMedia = () => {
   const [tiktokSelectedYears, setTiktokSelectedYears] = useState<string[]>([]);
   const [tiktokSelectedMonths, setTiktokSelectedMonths] = useState<string[]>([]);
   const [instagramPostTypeSelectedBrands, setInstagramPostTypeSelectedBrands] = useState<string[]>([]);
-  const [instagramPostsSelectedBrands, setInstagramPostsSelectedBrands] = useState<string[]>([]);
-  const [tiktokSelectedBrands, setTiktokSelectedBrands] = useState<string[]>([]);
+  const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
+  const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
   
   const { 
     data: instagramData, 
@@ -792,15 +792,16 @@ const SocialMedia = () => {
               Instagram Posts Performance
             </CardTitle>
             <CardDescription className="text-sm text-gray-600">Recent posts and their engagement metrics</CardDescription>
-            
-            {/* Brand Selector */}
+            <br />
+
+            {/* Company Selector */}
             <div className="mt-4 flex flex-col gap-1 max-w-xs">
-              <label className="text-xs font-medium text-foreground">Brand</label>
+              <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
                 options={instagramUniqueBrands}
-                selected={instagramPostsSelectedBrands}
-                onChange={setInstagramPostsSelectedBrands}
-                placeholder="All Brands"
+                selected={instagramPostsSelectedCompanies}
+                onChange={setInstagramPostsSelectedCompanies}
+                placeholder="All Companies"
                 className="w-full"
               />
             </div>
@@ -816,12 +817,12 @@ const SocialMedia = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {(igData || [])
-                .filter(row => row && (instagramPostsSelectedBrands.length === 0 || instagramPostsSelectedBrands.includes(row.company)))
+                .filter(row => row && (instagramPostsSelectedCompanies.length === 0 || instagramPostsSelectedCompanies.includes(row.company)))
                 .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
                 .slice(0, 9)
                 .map((post, index) => (
                 <div key={index} className="space-y-2">
-                  {/* Brand Tag Outside */}
+                  {/* Company Tag Outside */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
@@ -1430,15 +1431,16 @@ const SocialMedia = () => {
               TikTok Videos Performance
             </CardTitle>
             <CardDescription className="text-sm text-gray-600">Recent videos and their engagement metrics</CardDescription>
-            
-            {/* Brand Selector */}
+            <br />
+
+            {/* Company Selector */}
             <div className="mt-4 flex flex-col gap-1 max-w-xs">
-              <label className="text-xs font-medium text-foreground">Brand</label>
+              <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
                 options={tiktokUniqueBrands}
-                selected={tiktokSelectedBrands}
-                onChange={setTiktokSelectedBrands}
-                placeholder="All Brands"
+                selected={tiktokSelectedCompanies}
+                onChange={setTiktokSelectedCompanies}
+                placeholder="All Companies"
                 className="w-full"
               />
             </div>
@@ -1453,12 +1455,12 @@ const SocialMedia = () => {
                 </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(ttData || [])
-                  .filter(row => row && (tiktokSelectedBrands.length === 0 || tiktokSelectedBrands.includes(row.company)))
+                  .filter(row => row && (tiktokSelectedCompanies.length === 0 || tiktokSelectedCompanies.includes(row.company)))
                   .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
                   .slice(0, 9)
                   .map((video, index) => (
                   <div key={index} className="space-y-2">
-                  {/* Brand Tag Outside */}
+                  {/* Company Tag Outside */}
                   <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-[#ff0050] text-xs font-bold px-2 py-1 rounded-full bg-[#ff0050]/10 border border-[#ff0050]/20">
