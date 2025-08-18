@@ -1450,7 +1450,7 @@ const SocialMedia = () => {
             <CardContent>
             {/* Ranking Label */}
               <div className="mb-4 text-center">
-                <span className="inline-flex items-center gap-2 bg-blue-100 text-black text-sm font-semibold px-4 py-2 rounded-full border border-blue-200">
+                <span className="inline-flex items-center gap-2 bg-[#00f2ea] text-black text-sm font-semibold px-4 py-2 rounded-full border border-gray-200">
                   <Eye className="w-4 h-4 text-black" />
                   Ranked by Views
                 </span>
@@ -1479,7 +1479,7 @@ const SocialMedia = () => {
                       <span className="text-xs text-[#ff0050] font-medium">{video.published_date || 'Unknown date'}</span>
                     </div>
 
-                    <div className="bg-white border border-gray-500 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
                       {/* Video Embed */}
                       <div className="relative aspect-[9/16] bg-black rounded-t-xl overflow-hidden">
                         {video.post_link ? (
@@ -1529,7 +1529,7 @@ const SocialMedia = () => {
                     </div>
 
                     {/* Footer metrics */}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-500">
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <Users className="w-3 h-3" />
                         <span>{formatNumber(video.followers)}</span>
