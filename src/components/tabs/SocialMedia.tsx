@@ -1582,7 +1582,7 @@ const SocialMedia = () => {
             <Instagram className="w-4 h-4" />
             Instagram
           </TabsTrigger>
-          <TabsTrigger value="tiktok" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-100 data-[state=active]:to-purple-100 data-[state=active]:text-violet-800 data-[state=active]:shadow-soft font-semibold transition-all duration-200 flex items-center gap-2">
+          <TabsTrigger value="tiktok" className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-100 data-[state=active]:to-blue-100 data-[state=active]:text-cyan-800 data-[state=active]:shadow-soft font-semibold transition-all duration-200 flex items-center gap-2">
             <TikTokIcon className="w-4 h-4" />
             TikTok
           </TabsTrigger>
