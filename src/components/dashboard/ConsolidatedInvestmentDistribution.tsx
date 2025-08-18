@@ -58,23 +58,36 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
     return brands.sort();
   }, [yearFilteredData]);
 
-  // Initialize defaults: All Brands vs Avent
+  // Initialize defaults: All Brands vs Avent or top brand if Avent is missing
   useEffect(() => {
     if (uniqueBrands.length > 0) {
       if (leftChartBrands.length === 0) {
         setLeftChartBrands([]); // All brands by default (empty array means all)
       }
       if (rightChartBrands.length === 0) {
-        const aventBrands = uniqueBrands.filter(brand => 
+        const aventBrands = uniqueBrands.filter(brand =>
           brand.toLowerCase().includes("avent")
         );
-        setRightChartBrands(aventBrands.length > 0 ? [aventBrands[0]] : []);
+        if (aventBrands.length > 0) {
+          setRightChartBrands([aventBrands[0]]);
+        } else {
+          // Find brand with highest total spend
+          const spendByBrand = yearFilteredData.reduce((acc, row) => {
+            const brand = row["brand root"];
+            const spend = Number(row["spend (usd)"]) || 0;
+            acc[brand] = (acc[brand] || 0) + spend;
+            return acc;
+          }, {} as Record<string, number>);
+          const topBrand = Object.entries(spendByBrand)
+            .sort((a, b) => b[1] - a[1])[0]?.[0];
+          setRightChartBrands(topBrand ? [topBrand] : []);
+        }
       }
       if (publishersSelectedBrands.length === 0) {
         setPublishersSelectedBrands([]); // All brands by default for publishers
       }
     }
-  }, [uniqueBrands.join(','), leftChartBrands.length, rightChartBrands.length, publishersSelectedBrands.length]);
+  }, [uniqueBrands.join(','), leftChartBrands.length, rightChartBrands.length, publishersSelectedBrands.length, yearFilteredData]);
 
 
   // Calculate publishers spend data for selected brands
