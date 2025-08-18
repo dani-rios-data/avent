@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { useState, useMemo, useEffect, useRef, useId } from "react";
+import { ChevronDown, Search } from "lucide-react";
 import { cn, formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ export function MultiSelectWithTotals({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const selectAllId = useId();
 
   // Auto-close when trigger goes out of view
   useEffect(() => {
@@ -118,16 +119,28 @@ export function MultiSelectWithTotals({
           <div className="border-b border-border">
             <div className="flex items-center space-x-2 p-3">
               <Checkbox
-                id="select-all"
+                id={selectAllId}
                 checked={allSelected}
-                onCheckedChange={handleSelectAll}
+                onCheckedChange={() => {
+                  handleSelectAll();
+                  setOpen(true);
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
                 className={cn(
                   someSelected && !allSelected && "data-[state=checked]:bg-muted"
                 )}
               />
               <label
-                htmlFor="select-all"
+                htmlFor={selectAllId}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelectAll();
+                  setOpen(true);
+                }}
               >
                 {allSelected ? "Deselect All" : "Select All"}
               </label>
