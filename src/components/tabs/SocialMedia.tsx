@@ -814,7 +814,9 @@ const SocialMedia = () => {
                 Ranked by Likes
               </span>
             </div>
-            
+
+            <br />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
               {(igData || [])
                 .filter(row => row && (instagramPostsSelectedCompanies.length === 0 || instagramPostsSelectedCompanies.includes(row.company)))
@@ -1446,13 +1448,16 @@ const SocialMedia = () => {
             </div>
           </CardHeader>
             <CardContent>
-              {/* Ranking Label */}
-                <div className="mb-4 text-center">
-                  <span className="inline-flex items-center gap-2 bg-blue-100 text-black text-sm font-semibold px-4 py-2 rounded-full border border-blue-200">
-                    <Eye className="w-4 h-4 text-black" />
-                    Ranked by Views
-                  </span>
-                </div>
+            {/* Ranking Label */}
+              <div className="mb-4 text-center">
+                <span className="inline-flex items-center gap-2 bg-blue-100 text-black text-sm font-semibold px-4 py-2 rounded-full border border-blue-200">
+                  <Eye className="w-4 h-4 text-black" />
+                  Ranked by Views
+                </span>
+              </div>
+
+              <br />
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
                 {(ttData || [])
                   .filter(row => row && (tiktokSelectedCompanies.length === 0 || tiktokSelectedCompanies.includes(row.company)))
