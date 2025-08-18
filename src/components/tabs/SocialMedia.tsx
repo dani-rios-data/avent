@@ -1003,15 +1003,15 @@ const SocialMedia = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-white border-cyan-200 shadow-soft rounded-2xl">
+          <Card className="bg-white border-[#ff0050]/30 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-cyan-600 capitalize tracking-wide">Views</p>
-                  <p className="text-2xl font-bold text-cyan-800 tracking-tight">{formatNumber(totalViews)}</p>
+                  <p className="text-sm font-medium text-[#ff0050] capitalize tracking-wide">Views</p>
+                  <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{formatNumber(totalViews)}</p>
                 </div>
-                <div className="w-10 h-10 bg-cyan-200 rounded-xl flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-cyan-700" />
+                <div className="w-10 h-10 bg-[#ff0050]/10 rounded-xl flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-[#ff0050]" />
                 </div>
               </div>
             </CardContent>
