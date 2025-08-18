@@ -815,7 +815,7 @@ const SocialMedia = () => {
               </span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
               {(igData || [])
                 .filter(row => row && (instagramPostsSelectedCompanies.length === 0 || instagramPostsSelectedCompanies.includes(row.company)))
                 .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
@@ -1448,12 +1448,12 @@ const SocialMedia = () => {
             <CardContent>
               {/* Ranking Label */}
                 <div className="mb-4 text-center">
-                  <span className="inline-flex items-center gap-2 bg-[#ff0050]/10 text-[#ff0050] text-sm font-semibold px-4 py-2 rounded-full border border-[#ff0050]/20">
-                    <TikTokIcon className="w-4 h-4 text-[#00f2ea]" />
+                  <span className="inline-flex items-center gap-2 bg-blue-100 text-black text-sm font-semibold px-4 py-2 rounded-full border border-blue-200">
+                    <Eye className="w-4 h-4 text-black" />
                     Ranked by Views
                   </span>
                 </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
                 {(ttData || [])
                   .filter(row => row && (tiktokSelectedCompanies.length === 0 || tiktokSelectedCompanies.includes(row.company)))
                   .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
@@ -1474,7 +1474,7 @@ const SocialMedia = () => {
                       <span className="text-xs text-[#ff0050] font-medium">{video.published_date || 'Unknown date'}</span>
                     </div>
 
-                    <div className="bg-white border border-[#00f2ea]/20 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
+                    <div className="bg-white border border-gray-500 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group">
                       {/* Video Embed */}
                       <div className="relative aspect-[9/16] bg-black rounded-t-xl overflow-hidden">
                         {video.post_link ? (
@@ -1524,7 +1524,7 @@ const SocialMedia = () => {
                     </div>
 
                     {/* Footer metrics */}
-                    <div className="flex items-center justify-between pt-2 border-t border-[#ff0050]/20">
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-500">
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <Users className="w-3 h-3" />
                         <span>{formatNumber(video.followers)}</span>
