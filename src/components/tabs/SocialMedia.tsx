@@ -1016,29 +1016,29 @@ const SocialMedia = () => {
 
         {/* Top Row - 4 metrics centered */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-violet-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-violet-600 capitalize tracking-wide">Videos</p>
-                  <p className="text-2xl font-bold text-violet-800 tracking-tight">{ttData.length.toLocaleString()}</p>
-                </div>
-                <div className="w-10 h-10 bg-violet-200 rounded-xl flex items-center justify-center">
-                  <TikTokIcon className="w-5 h-5 text-violet-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
           <Card className="bg-white border-[#ff0050]/30 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#ff0050] capitalize tracking-wide">Views</p>
-                  <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{formatNumber(totalViews)}</p>
+                  <p className="text-sm font-medium text-[#ff0050] capitalize tracking-wide">Videos</p>
+                  <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{ttData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-[#ff0050]/10 rounded-xl flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-[#ff0050]" />
+                  <TikTokIcon className="w-5 h-5 text-[#ff0050]" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-[#00f2ea]/30 shadow-soft rounded-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-[#00f2ea] capitalize tracking-wide">Views</p>
+                  <p className="text-2xl font-bold text-[#00f2ea] tracking-tight">{formatNumber(totalViews)}</p>
+                </div>
+                <div className="w-10 h-10 bg-[#00f2ea]/10 rounded-xl flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-[#00f2ea]" />
                 </div>
               </div>
             </CardContent>
@@ -1138,7 +1138,7 @@ const SocialMedia = () => {
           <Card className="shadow-soft rounded-2xl border-gray-200">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-[#ff0050]" />
+                <BarChart3 className="w-5 h-5 text-[#00f2ea]" />
                 Top Companies by Views
               </CardTitle>
               <CardDescription className="text-sm text-gray-600">Companies ranked by total views</CardDescription>
@@ -1200,8 +1200,8 @@ const SocialMedia = () => {
                                   if (tooltip) tooltip.style.display = 'none';
                                 }}
                               >
-                                <div 
-                                  className="bg-[#ff0050] h-2 rounded-full transition-all duration-300"
+                                <div
+                                  className="bg-[#00f2ea] h-2 rounded-full transition-all duration-300"
                                   style={{ width: `${(views / maxViews) * 100}%` }}
                                 />
                                 <div 
@@ -1219,8 +1219,8 @@ const SocialMedia = () => {
                                   {/* Header with icon and title */}
                                   <div className="relative flex items-center gap-3 mb-3">
                                     <div className="relative">
-                                      <div className="w-4 h-4 rounded-full bg-[#ff0050] shadow-sm ring-2 ring-white/80" />
-                                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-[#ff0050] opacity-30 animate-pulse" />
+                                      <div className="w-4 h-4 rounded-full bg-[#00f2ea] shadow-sm ring-2 ring-white/80" />
+                                      <div className="absolute inset-0 w-4 h-4 rounded-full bg-[#00f2ea] opacity-30 animate-pulse" />
                                     </div>
                                     <div className="flex-1">
                                       <p className="font-bold text-gray-800 text-sm leading-tight">{company}</p>
@@ -1236,7 +1236,7 @@ const SocialMedia = () => {
                                     <div className="flex items-center justify-between">
                                       <span className="text-gray-600 text-xs font-medium">Total Views</span>
                                       <div className="flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-[#ff0050]" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#00f2ea]" />
                                         <span className="font-bold text-gray-800 text-sm">{formatNumber(views)}</span>
                                       </div>
                                     </div>
@@ -1244,8 +1244,8 @@ const SocialMedia = () => {
                                     <div className="flex items-center justify-between">
                                       <span className="text-gray-600 text-xs font-medium">Total Videos</span>
                                       <div className="flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-                                        <span className="font-bold text-cyan-600 text-sm">{videoCount.toLocaleString()}</span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#ff0050]" />
+                                        <span className="font-bold text-[#ff0050] text-sm">{videoCount.toLocaleString()}</span>
                                       </div>
                                     </div>
                                     
@@ -1260,8 +1260,8 @@ const SocialMedia = () => {
                                     {/* Progress bar */}
                                     <div className="mt-3">
                                       <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                        <div 
-                                          className="h-full rounded-full bg-[#ff0050] transition-all duration-500 ease-out"
+                                        <div
+                                          className="h-full rounded-full bg-[#00f2ea] transition-all duration-500 ease-out"
                                           style={{ width: `${(views / maxViews) * 100}%` }}
                                         />
                                       </div>
@@ -1269,7 +1269,7 @@ const SocialMedia = () => {
                                   </div>
                                   
                                   {/* Bottom accent */}
-                                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-[#ff0050]/20 to-transparent rounded-full" />
+                                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-[#00f2ea]/20 to-transparent rounded-full" />
                                   
                                   {/* Arrow */}
                                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200"></div>
@@ -1477,8 +1477,8 @@ const SocialMedia = () => {
             <CardContent>
             {/* Ranking Label */}
               <div className="mb-4 text-center">
-                <span className="inline-flex items-center gap-2 bg-[#00f2ea] text-black text-sm font-semibold px-4 py-2 rounded-full border border-gray-200">
-                  <Eye className="w-4 h-4 text-black" />
+                <span className="inline-flex items-center gap-2 bg-[#00f2ea]/10 text-[#00f2ea] text-sm font-semibold px-4 py-2 rounded-full">
+                  <Eye className="w-4 h-4 text-[#00f2ea]" />
                   Ranked by Views
                 </span>
               </div>
