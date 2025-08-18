@@ -80,8 +80,10 @@ const SocialMedia = () => {
   const [activeTab, setActiveTab] = useState("instagram");
   const [instagramSelectedYears, setInstagramSelectedYears] = useState<string[]>([]);
   const [instagramSelectedMonths, setInstagramSelectedMonths] = useState<string[]>([]);
+  const [instagramSelectedBrands, setInstagramSelectedBrands] = useState<string[]>([]);
   const [tiktokSelectedYears, setTiktokSelectedYears] = useState<string[]>([]);
   const [tiktokSelectedMonths, setTiktokSelectedMonths] = useState<string[]>([]);
+  const [tiktokSelectedBrands, setTiktokSelectedBrands] = useState<string[]>([]);
   const [instagramPostTypeSelectedBrands, setInstagramPostTypeSelectedBrands] = useState<string[]>([]);
   const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
   const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
@@ -150,7 +152,7 @@ const SocialMedia = () => {
     });
     const sortedBrands = Array.from(brands).sort();
 
-    // Filter Instagram data based on selected years and months
+    // Filter Instagram data based on selected years, months, and brands
     const filteredData = igData.filter(row => {
       if (!row.published_date) return false;
       
@@ -172,8 +174,9 @@ const SocialMedia = () => {
       
       const yearMatch = instagramSelectedYears.length === 0 || instagramSelectedYears.includes(year);
       const monthMatch = instagramSelectedMonths.length === 0 || instagramSelectedMonths.includes(month);
-      
-      return yearMatch && monthMatch;
+      const brandMatch = instagramSelectedBrands.length === 0 || instagramSelectedBrands.includes(row.company);
+
+      return yearMatch && monthMatch && brandMatch;
     });
 
     return {
@@ -182,12 +185,12 @@ const SocialMedia = () => {
       instagramUniqueBrands: sortedBrands,
       filteredInstagramData: filteredData
     };
-  }, [instagramData, instagramSelectedYears, instagramSelectedMonths]);
+  }, [instagramData, instagramSelectedYears, instagramSelectedMonths, instagramSelectedBrands]);
 
   // Extract unique years, months, and brands from TikTok dataset
   const { tiktokUniqueYears, tiktokUniqueMonths, tiktokUniqueBrands, filteredTikTokData } = useMemo(() => {
     const ttData = tiktokData as unknown as TikTokDataRow[];
-    
+
     if (!ttData) return { tiktokUniqueYears: [], tiktokUniqueMonths: [], tiktokUniqueBrands: [], filteredTikTokData: [] };
 
     // Extract years and months from TikTok dataset
@@ -236,10 +239,10 @@ const SocialMedia = () => {
     });
     const sortedBrands = Array.from(brands).sort();
 
-    // Filter TikTok data based on selected years and months
+    // Filter TikTok data based on selected years, months, and brands
     const filteredData = ttData.filter(row => {
       if (!row.published_date) return false;
-      
+
       let year: string, month: string;
       
       if (row.published_date.includes('/')) {
@@ -258,8 +261,9 @@ const SocialMedia = () => {
       
       const yearMatch = tiktokSelectedYears.length === 0 || tiktokSelectedYears.includes(year);
       const monthMatch = tiktokSelectedMonths.length === 0 || tiktokSelectedMonths.includes(month);
-      
-      return yearMatch && monthMatch;
+      const brandMatch = tiktokSelectedBrands.length === 0 || tiktokSelectedBrands.includes(row.company);
+
+      return yearMatch && monthMatch && brandMatch;
     });
 
     return {
@@ -268,7 +272,7 @@ const SocialMedia = () => {
       tiktokUniqueBrands: sortedBrands,
       filteredTikTokData: filteredData
     };
-  }, [tiktokData, tiktokSelectedYears, tiktokSelectedMonths]);
+  }, [tiktokData, tiktokSelectedYears, tiktokSelectedMonths, tiktokSelectedBrands]);
 
   if (instagramLoading || tiktokLoading) {
     return (
@@ -354,6 +358,18 @@ const SocialMedia = () => {
                 className="w-full"
               />
             </div>
+
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Brand</label>
+              <MultiSelect
+                options={instagramUniqueBrands}
+                selected={instagramSelectedBrands}
+                onChange={setInstagramSelectedBrands}
+                placeholder="All Brands"
+                className="w-full"
+              />
+            </div>
+
           </div>
         </div>
 
@@ -981,6 +997,17 @@ const SocialMedia = () => {
                   setTiktokSelectedMonths(selectedValues);
                 }}
                 placeholder="All Months"
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Brand</label>
+              <MultiSelect
+                options={tiktokUniqueBrands}
+                selected={tiktokSelectedBrands}
+                onChange={setTiktokSelectedBrands}
+                placeholder="All Brands"
                 className="w-full"
               />
             </div>
