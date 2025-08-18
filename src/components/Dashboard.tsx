@@ -56,7 +56,7 @@ const Dashboard = () => {
         </div>
         
         {/* Navigation bar with full width background */}
-        <div className="bg-orange-100 border-t border-b border-orange-200 flex items-center">
+        <div className="bg-[#EA899A] border-t border-b border-[#EA899A] flex items-center">
           <div className="container mx-auto max-w-7xl">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="px-6 py-1">
               <TabsList className="grid w-full grid-cols-4 bg-transparent rounded-none border-none p-0 shadow-none">
