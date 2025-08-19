@@ -74,13 +74,15 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
   }, [allBrandsWithSpend]);
 
   const [selectedSpendBrands, setSelectedSpendBrands] = useState<string[]>([]);
+  const [isSpendBrandsInitialized, setIsSpendBrandsInitialized] = useState(false);
 
-  // Update selected brands when allBrands changes
+  // Update selected brands when allBrands changes - ensure complete independence
   useMemo(() => {
-    if (allBrands.length > 0 && selectedSpendBrands.length === 0) {
-      setSelectedSpendBrands(allBrands.slice(0, 15));
+    if (allBrands.length > 0 && !isSpendBrandsInitialized) {
+      setSelectedSpendBrands([...allBrands.slice(0, 15)]); // Create new array to avoid reference sharing
+      setIsSpendBrandsInitialized(true);
     }
-  }, [allBrands, selectedSpendBrands.length]);
+  }, [allBrands, isSpendBrandsInitialized]);
 
   const spendChartData = useMemo(() => {
     const yearData = data.reduce((acc, row) => {
@@ -264,7 +266,10 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
                 <MultiSelectWithTotals
                   options={allBrandsWithSpend}
                   selected={selectedSpendBrands}
-                  onChange={setSelectedSpendBrands}
+                  onChange={(newSelection) => {
+                    // Ensure complete independence by creating new array
+                    setSelectedSpendBrands([...newSelection]);
+                  }}
                   placeholder={`Select ${title.toLowerCase()}s...`}
                 />
               </div>

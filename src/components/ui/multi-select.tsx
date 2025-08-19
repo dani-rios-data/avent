@@ -111,18 +111,11 @@ export function MultiSelect({
           <div className="border-b border-border">
             <div 
               className="flex items-center space-x-2 p-3 hover:bg-muted/30 cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleSelectAll();
-              }}
             >
               <Checkbox
                 id="select-all"
                 checked={allSelected}
-                onCheckedChange={() => {
-                  // Handled by parent div onClick
-                }}
+                onCheckedChange={handleSelectAll}
                 className={cn(
                   someSelected && !allSelected && "data-[state=checked]:bg-muted"
                 )}

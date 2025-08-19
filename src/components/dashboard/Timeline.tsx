@@ -69,13 +69,15 @@ const Timeline = ({ data, title = "Brand" }: TimelineProps) => {
   }, [data]);
 
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [isTimelineBrandsInitialized, setIsTimelineBrandsInitialized] = useState(false);
 
-  // Update selected brands when allBrands changes
+  // Update selected brands when allBrands changes - ensure complete independence
   useMemo(() => {
-    if (allBrandsWithSpend.length > 0 && selectedBrands.length === 0) {
-      setSelectedBrands(allBrandsWithSpend.slice(0, 8).map(item => item.brand));
+    if (allBrandsWithSpend.length > 0 && !isTimelineBrandsInitialized) {
+      setSelectedBrands([...allBrandsWithSpend.slice(0, 8).map(item => item.brand)]); // Create new array to avoid reference sharing
+      setIsTimelineBrandsInitialized(true);
     }
-  }, [allBrandsWithSpend, selectedBrands.length]);
+  }, [allBrandsWithSpend, isTimelineBrandsInitialized]);
 
   const lineChartData = useMemo(() => {
     const monthData = data.reduce((acc, row) => {
@@ -187,7 +189,10 @@ const Timeline = ({ data, title = "Brand" }: TimelineProps) => {
                 <MultiSelectWithTotals
                   options={allBrandsWithSpend}
                   selected={selectedBrands}
-                  onChange={setSelectedBrands}
+                  onChange={(newSelection) => {
+                    // Ensure complete independence by creating new array
+                    setSelectedBrands([...newSelection]);
+                  }}
                   placeholder={`Select ${title.toLowerCase()}s...`}
                 />
               </div>

@@ -59,6 +59,7 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
   }, [yearFilteredData]);
 
   // Initialize defaults: All Brands vs Avent or top brand if Avent is missing
+  const uniqueBrandsKey = uniqueBrands.join(',');
   useEffect(() => {
     if (uniqueBrands.length > 0) {
       if (leftChartBrands.length === 0) {
@@ -87,120 +88,14 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         setPublishersSelectedBrands([]); // All brands by default for publishers
       }
     }
-  }, [uniqueBrands.join(','), leftChartBrands.length, rightChartBrands.length, publishersSelectedBrands.length, yearFilteredData]);
-
-
-  // Calculate publishers spend data for selected brands
-  const publishersSpendData = useMemo(() => {
-    const filteredData = publishersSelectedBrands.length === 0 
-      ? yearFilteredData 
-      : yearFilteredData.filter(row => publishersSelectedBrands.includes(row["brand root"]));
-
-    const publisherSpends = filteredData.reduce((acc, row) => {
-      const publisher = row.publisher;
-      if (!publisher) return acc;
-      
-      acc[publisher] = (acc[publisher] || 0) + (Number(row["spend (usd)"]) || 0);
-      return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(publisherSpends)
-      .map(([publisher, spend]) => ({
-        name: publisher,
-        spend: spend / 1000000, // Convert to millions
-        originalSpend: spend
-      }))
-      .sort((a, b) => b.spend - a.spend); // Sort by spend descending
-  }, [yearFilteredData, publishersSelectedBrands]);
-
-
-  const CustomDonutTooltip = useCallback(({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const originalValue = data.value * 1000000; // Convert back to original USD value
-      
-      return (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-xl min-w-[200px]">
-          <div className="border-b border-gray-100 pb-2 mb-2">
-            <p className="font-semibold text-gray-900 text-sm">{data.name}</p>
-          </div>
-          
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">Spend:</span>
-              <span className="text-sm font-bold text-blue-600">
-                ${formatDonutValue(data.value)}
-              </span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">Exact Amount:</span>
-              <span className="text-xs font-medium text-gray-700">
-                ${originalValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-600">Share:</span>
-              <span className="text-sm font-bold text-green-600">
-                {data.percentage.toFixed(1)}%
-              </span>
-            </div>
-            
-            <div className="pt-1 border-t border-gray-100">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(data.percentage, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  }, []);
-
-  // Enhanced formatting function for spend values with B/M/K system
-  const formatSpendValue = (spend: number, originalSpend: number) => {
-    if (originalSpend >= 1000000000) {
-      // Show in billions with B suffix if 1B or more
-      return `${(originalSpend / 1000000000).toFixed(1)}B`;
-    } else if (originalSpend >= 1000000) {
-      // Show in millions with M suffix if 1M or more
-      return `${(originalSpend / 1000000).toFixed(1)}M`;
-    } else if (originalSpend >= 1000) {
-      // Show in thousands with K suffix if 1K or more but less than 1M
-      return `${(originalSpend / 1000).toFixed(0)}K`;
-    } else {
-      // Show raw value if less than 1K
-      return `${originalSpend.toFixed(0)}`;
-    }
-  };
-
-  // Formatting function specifically for donut chart values
-  const formatDonutValue = (value: number) => {
-    // value is already in millions, so we need to convert back to original value
-    const originalValue = value * 1000000;
-    
-    if (originalValue >= 1000000000) {
-      return `${(originalValue / 1000000000).toFixed(1)}B`;
-    } else if (originalValue >= 1000000) {
-      return `${(originalValue / 1000000).toFixed(1)}M`;
-    } else if (originalValue >= 1000) {
-      return `${(originalValue / 1000).toFixed(0)}K`;
-    } else {
-      return `${originalValue.toFixed(0)}`;
-    }
-  };
+  }, [uniqueBrandsKey, uniqueBrands, leftChartBrands.length, rightChartBrands.length, publishersSelectedBrands.length, yearFilteredData]);
 
   const TopPublishersContent = () => {
-    // Calculate distribution for left chart (selected brands)
-    const leftPublishersData = useMemo(() => {
-      const filteredData = leftChartBrands.length === 0 
+    // Calculate distribution for publishers (using independent state)
+    const publishersRankingData = useMemo(() => {
+      const filteredData = publishersSelectedBrands.length === 0 
         ? yearFilteredData 
-        : yearFilteredData.filter(row => leftChartBrands.includes(row["brand root"]));
+        : yearFilteredData.filter(row => publishersSelectedBrands.includes(row["brand root"]));
 
       const publisherSpends = filteredData.reduce((acc, row) => {
         const publisher = row.publisher;
@@ -221,234 +116,138 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         }))
         .sort((a, b) => b.originalSpend - a.originalSpend)
         .slice(0, 30); // Top 30
-    }, [yearFilteredData, leftChartBrands]);
+    }, [publishersSelectedBrands]);
 
-    // Calculate distribution for right chart (selected brands)
-    const rightPublishersData = useMemo(() => {
-      const filteredData = rightChartBrands.length === 0 
-        ? yearFilteredData 
-        : yearFilteredData.filter(row => rightChartBrands.includes(row["brand root"]));
+    const formatSpendValue = (spend: number, originalSpend: number) => {
+      if (originalSpend >= 1000000) {
+        return `${(originalSpend / 1000000).toFixed(1)}M`;
+      } else if (originalSpend >= 1000) {
+        return `${(originalSpend / 1000).toFixed(0)}K`;
+      } else {
+        return originalSpend.toFixed(0);
+      }
+    };
 
-      const publisherSpends = filteredData.reduce((acc, row) => {
-        const publisher = row.publisher;
-        if (!publisher) return acc;
-        
-        acc[publisher] = (acc[publisher] || 0) + (Number(row["spend (usd)"]) || 0);
-        return acc;
-      }, {} as Record<string, number>);
-
-      const totalSpend = Object.values(publisherSpends).reduce((sum, spend) => sum + spend, 0);
-
-      return Object.entries(publisherSpends)
-        .map(([publisher, spend]) => ({
-          name: publisher,
-          spend: spend / 1000000, // Convert to millions for display calculation
-          originalSpend: spend, // Keep original value for formatting and percentage
-          percentage: totalSpend > 0 ? (spend / totalSpend) * 100 : 0,
-        }))
-        .sort((a, b) => b.originalSpend - a.originalSpend)
-        .slice(0, 30); // Top 30
-    }, [yearFilteredData, rightChartBrands]);
+    const formatDonutValue = (value: number) => {
+      if (value >= 1000000) {
+        return `${(value / 1000000).toFixed(1)}M`;
+      } else if (value >= 1000) {
+        return `${(value / 1000).toFixed(0)}K`;
+      } else {
+        return value.toFixed(0);
+      }
+    };
 
     return (
       <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-lg font-semibold text-foreground mb-2">Top Publishers by Spend</h2>
           <p className="text-sm text-muted-foreground">
-            Publisher ranking comparison
+            Publisher ranking by selected brands
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Chart - Publishers Ranking */}
-          <Card className="bg-white border-border shadow-soft rounded-2xl">
-            <CardHeader className="pb-4">
-              {/* Left Chart Selector */}
-              <div className="mb-4">
-                <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
-                  <div className="flex flex-col gap-1 min-w-[200px]">
-                    <label className="text-xs font-medium text-foreground">Brand</label>
-                    <MultiSelect
-                      options={uniqueBrands}
-                      selected={leftChartBrands}
-                      onChange={setLeftChartBrands}
-                      placeholder="All Brands"
-                      className="w-full"
-                    />
-                  </div>
+        {/* Single Publishers Chart with Independent Selector */}
+        <Card className="bg-white border-border shadow-soft rounded-2xl">
+          <CardHeader className="pb-4">
+            {/* Publishers Chart Selector */}
+            <div className="mb-4">
+              <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+                <div className="flex flex-col gap-1 min-w-[200px]">
+                  <label className="text-xs font-medium text-foreground">Brand</label>
+                  <MultiSelect
+                    options={uniqueBrands}
+                    selected={publishersSelectedBrands}
+                    onChange={setPublishersSelectedBrands}
+                    placeholder="All Brands"
+                    className="w-full"
+                  />
                 </div>
               </div>
+            </div>
 
-              <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-                {leftChartBrands.length === 0 ? "All Brands (Gross)" : leftChartBrands.length === 1 ? leftChartBrands[0] : `${leftChartBrands.length} brands selected`}
-              </CardTitle>
+            <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
+              {publishersSelectedBrands.length === 0 ? "All Brands (Gross)" : publishersSelectedBrands.length === 1 ? publishersSelectedBrands[0] : `${publishersSelectedBrands.length} brands selected`}
+            </CardTitle>
 
-              <p className="text-xs text-muted-foreground text-center">
-                Top 30 Publishers - Total: ${formatDonutValue(leftPublishersData.reduce((sum, item) => sum + item.spend, 0))}
-              </p>
-            </CardHeader>
-            <CardContent>
-              {leftPublishersData.length > 0 ? (
-                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-                  {leftPublishersData.map((publisher, index) => {
-                    const maxSpend = leftPublishersData[0]?.spend || 1;
-                    const percentage = (publisher.spend / maxSpend) * 100;
-                    
-                    return (
-                      <div key={publisher.name} className="flex items-center gap-2 p-2 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:shadow-sm transition-all duration-200">
-                        {/* Ranking Number */}
-                        <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </div>
-                        
-                        {/* Publisher Name */}
-                        <div className="flex-shrink-0 w-32 text-xs font-semibold text-gray-800 truncate" title={publisher.name}>
-                          {publisher.name}
-                        </div>
-                        
-                        {/* Progress Bar */}
-                        <TooltipProvider delayDuration={100}>
-                          <UITooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex-1 relative cursor-pointer">
-                                <div className="w-full bg-gray-200 rounded-full h-4">
-                                  <div 
-                                    className="bg-gradient-to-r from-pink-400 to-rose-400 h-4 rounded-full transition-all duration-300"
-                                    style={{ width: `${Math.max(percentage, 2)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                              <div className="space-y-1">
-                                <p className="font-medium text-gray-800">{publisher.name}</p>
-                                <p className="text-sm text-pink-600">
-                                  Spend: ${formatSpendValue(publisher.spend, publisher.originalSpend)}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {publisher.percentage.toFixed(1)}% of total spend
-                                </p>
-                              </div>
-                            </TooltipContent>
-                          </UITooltip>
-                        </TooltipProvider>
-                        
-                        {/* Spend Amount */}
-                        <div className="flex-shrink-0 w-16 text-right">
-                          <span className="text-xs font-bold text-pink-700">
-                            ${formatSpendValue(publisher.spend, publisher.originalSpend)}
-                          </span>
-                        </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Top 30 Publishers - Total: ${formatDonutValue(publishersRankingData.reduce((sum, item) => sum + item.spend, 0))}
+            </p>
+          </CardHeader>
+          <CardContent>
+            {publishersRankingData.length > 0 ? (
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                {publishersRankingData.map((publisher, index) => {
+                  const maxSpend = publishersRankingData[0]?.spend || 1;
+                  const percentage = (publisher.spend / maxSpend) * 100;
+                  
+                  return (
+                    <div key={publisher.name} className="flex items-center gap-2 p-2 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:shadow-sm transition-all duration-200">
+                      {/* Ranking Number */}
+                      <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <p className="text-muted-foreground text-sm">No data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Right Chart - Publishers Ranking */}
-          <Card className="bg-white border-border shadow-soft rounded-2xl">
-            <CardHeader className="pb-4">
-              {/* Right Chart Selector */}
-              <div className="mb-4">
-                <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
-                  <div className="flex flex-col gap-1 min-w-[200px]">
-                    <label className="text-xs font-medium text-foreground">Brand</label>
-                    <MultiSelect
-                      options={uniqueBrands}
-                      selected={rightChartBrands}
-                      onChange={setRightChartBrands}
-                      placeholder="All Brands"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
+                      
+                      {/* Publisher Name */}
+                      <div className="flex-shrink-0 w-32 text-xs font-semibold text-gray-800 truncate" title={publisher.name}>
+                        {publisher.name}
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <TooltipProvider delayDuration={100}>
+                        <UITooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex-1 relative cursor-pointer">
+                              <div className="w-full bg-gray-200 rounded-full h-4">
+                                <div 
+                                  className="bg-gradient-to-r from-pink-400 to-rose-400 h-4 rounded-full transition-all duration-300"
+                                  style={{ width: `${Math.max(percentage, 2)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                            <div className="space-y-1">
+                              <p className="font-medium text-gray-800">{publisher.name}</p>
+                              <p className="text-sm text-pink-600">
+                                Spend: ${formatSpendValue(publisher.spend, publisher.originalSpend)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {publisher.percentage.toFixed(1)}% of total spend
+                              </p>
+                            </div>
+                          </TooltipContent>
+                        </UITooltip>
+                      </TooltipProvider>
+                      
+                      {/* Spend Amount */}
+                      <div className="flex-shrink-0 w-16 text-right">
+                        <span className="text-xs font-bold text-pink-700">
+                          ${formatSpendValue(publisher.spend, publisher.originalSpend)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-                {rightChartBrands.length === 0 ? "All Brands (Gross)" : rightChartBrands.length === 1 ? rightChartBrands[0] : `${rightChartBrands.length} brands selected`}
-              </CardTitle>
-
-              <p className="text-xs text-muted-foreground text-center">
-                Top 30 Publishers - Total: ${formatDonutValue(rightPublishersData.reduce((sum, item) => sum + item.spend, 0))}
-              </p>
-            </CardHeader>
-            <CardContent>
-              {rightPublishersData.length > 0 ? (
-                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-                  {rightPublishersData.map((publisher, index) => {
-                    const maxSpend = rightPublishersData[0]?.spend || 1;
-                    const percentage = (publisher.spend / maxSpend) * 100;
-                    
-                    return (
-                      <div key={publisher.name} className="flex items-center gap-2 p-2 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:shadow-sm transition-all duration-200">
-                        {/* Ranking Number */}
-                        <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </div>
-                        
-                        {/* Publisher Name */}
-                        <div className="flex-shrink-0 w-32 text-xs font-semibold text-gray-800 truncate" title={publisher.name}>
-                          {publisher.name}
-                        </div>
-                        
-                        {/* Progress Bar */}
-                        <TooltipProvider delayDuration={100}>
-                          <UITooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex-1 relative cursor-pointer">
-                                <div className="w-full bg-gray-200 rounded-full h-4">
-                                  <div 
-                                    className="bg-gradient-to-r from-pink-400 to-rose-400 h-4 rounded-full transition-all duration-300"
-                                    style={{ width: `${Math.max(percentage, 2)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                              <div className="space-y-1">
-                                <p className="font-medium text-gray-800">{publisher.name}</p>
-                                <p className="text-sm text-pink-600">
-                                  Spend: ${formatSpendValue(publisher.spend, publisher.originalSpend)}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  {publisher.percentage.toFixed(1)}% of total spend
-                                </p>
-                              </div>
-                            </TooltipContent>
-                          </UITooltip>
-                        </TooltipProvider>
-                        
-                        {/* Spend Amount */}
-                        <div className="flex-shrink-0 w-16 text-right">
-                          <span className="text-xs font-bold text-pink-700">
-                            ${formatSpendValue(publisher.spend, publisher.originalSpend)}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <p className="text-muted-foreground text-sm">Select brands to view data</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-muted-foreground text-sm">No data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   };
 
-
   // Stable chart component to prevent re-renders
-  const StableDonutChart = memo(({ chartData, chartId }: { chartData: any[], chartId: string }) => {
+  interface ChartDataItem {
+    name: string;
+    value: number;
+  }
+  
+  const StableDonutChart = memo(({ chartData, chartId }: { chartData: ChartDataItem[], chartId: string }) => {
     if (chartData.length === 0) {
       return (
         <div className="flex items-center justify-center h-64">
@@ -481,53 +280,28 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
               ))}
             </Pie>
             <Tooltip 
-              content={<CustomDonutTooltip />} 
-              isAnimationActive={false}
-              animationDuration={0}
-              wrapperStyle={{ outline: 'none', border: 'none' }}
+              formatter={(value: number, name: string) => [
+                `$${formatNumber(value * 1000000)}`, 
+                name
+              ]}
+              labelFormatter={(label) => `${label}`}
             />
             <Legend 
               verticalAlign="bottom" 
-              height={40}
-              iconType="circle"
-              iconSize={8}
-              formatter={(value, entry) => (
-                <span style={{ color: entry.color, fontSize: '10px', marginLeft: '4px' }}>
-                  {value}
-                </span>
-              )}
-              wrapperStyle={{
-                fontSize: '10px',
-                paddingTop: '10px'
-              }}
+              height={36}
+              formatter={(value) => value.length > 20 ? `${value.substring(0, 20)}...` : value}
             />
           </PieChart>
         </ResponsiveContainer>
       </div>
     );
-  }, (prevProps, nextProps) => {
-    // Custom comparison function to prevent unnecessary re-renders
-    if (prevProps.chartId !== nextProps.chartId) return false;
-    if (prevProps.chartData.length !== nextProps.chartData.length) return false;
-    
-    // Deep comparison of chart data
-    for (let i = 0; i < prevProps.chartData.length; i++) {
-      const prev = prevProps.chartData[i];
-      const next = nextProps.chartData[i];
-      if (prev.name !== next.name || prev.value !== next.value || prev.percentage !== next.percentage) {
-        return false;
-      }
-    }
-    
-    return true;
   });
 
-  // Separate component for left chart to isolate re-renders
-  const LeftChart = memo(({ 
-    title, 
-    type, 
-    selectedBrands, 
-    onBrandsChange, 
+  const LeftChart = memo(({
+    title,
+    type,
+    selectedBrands,
+    onBrandsChange,
     data 
   }: { 
     title: string, 
@@ -553,18 +327,15 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         return acc;
       }, {} as Record<string, number>);
 
-      const totalSpend = Object.values(spends).reduce((sum, spend) => sum + spend, 0);
-
       const result = Object.entries(spends)
-        .map(([key, spend]) => ({
-          name: key,
-          value: spend / 1000000,
-          percentage: ((spend / totalSpend) * 100),
+        .map(([name, value]) => ({
+          name,
+          value: value / 1000000 // Convert to millions
         }))
         .sort((a, b) => b.value - a.value);
-      
+        
       return result;
-    }, [data, selectedBrands.join(','), type]);
+    }, [data, selectedBrands, type]);
 
     return (
       <Card className="bg-white border-border shadow-soft rounded-2xl">
@@ -589,7 +360,7 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           </CardTitle>
 
           <p className="text-xs text-muted-foreground text-center">
-            Total spend: ${formatDonutValue(chartData.reduce((sum, item) => sum + item.value, 0))}
+            Total spend: ${formatNumber(chartData.reduce((sum, item) => sum + item.value, 0) * 1000000)}
           </p>
         </CardHeader>
         <CardContent>
@@ -599,12 +370,11 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
     );
   });
 
-  // Separate component for right chart to isolate re-renders
-  const RightChart = memo(({ 
-    title, 
-    type, 
-    selectedBrands, 
-    onBrandsChange, 
+  const RightChart = memo(({
+    title,
+    type,
+    selectedBrands,
+    onBrandsChange,
     data 
   }: { 
     title: string, 
@@ -630,18 +400,15 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
         return acc;
       }, {} as Record<string, number>);
 
-      const totalSpend = Object.values(spends).reduce((sum, spend) => sum + spend, 0);
-
       const result = Object.entries(spends)
-        .map(([key, spend]) => ({
-          name: key,
-          value: spend / 1000000,
-          percentage: ((spend / totalSpend) * 100),
+        .map(([name, value]) => ({
+          name,
+          value: value / 1000000 // Convert to millions
         }))
         .sort((a, b) => b.value - a.value);
         
       return result;
-    }, [data, selectedBrands.join(','), type]);
+    }, [data, selectedBrands, type]);
 
     return (
       <Card className="bg-white border-border shadow-soft rounded-2xl">
@@ -666,7 +433,7 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           </CardTitle>
 
           <p className="text-xs text-muted-foreground text-center">
-            Total spend: ${formatDonutValue(chartData.reduce((sum, item) => sum + item.value, 0))}
+            Total spend: ${formatNumber(chartData.reduce((sum, item) => sum + item.value, 0) * 1000000)}
           </p>
         </CardHeader>
         <CardContent>
@@ -677,7 +444,6 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
   });
 
   const DonutChartContent = ({ title, type }: { title: string, type: string }) => {
-
     return (
       <div className="space-y-6">
         <div className="text-center">
@@ -717,7 +483,6 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
           </h2>
         </div>
       </div>
-
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-white to-gray-50 shadow-soft rounded-2xl p-1 border border-gray-200">
