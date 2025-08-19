@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieCha
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatNumber } from "@/lib/utils";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 // Custom TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -99,10 +99,10 @@ const SocialMedia = () => {
   const [instagramPostTypeSelectedCompanies, setInstagramPostTypeSelectedCompanies] = useState<string[]>([]);
   const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
   const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
-  const [instagramYear, setInstagramYear] = useState("all");
-  const [instagramMonth, setInstagramMonth] = useState("all");
-  const [tiktokYear, setTiktokYear] = useState("all");
-  const [tiktokMonth, setTiktokMonth] = useState("all");
+  const [instagramYear, setInstagramYear] = useState<string[]>([]);
+  const [instagramMonth, setInstagramMonth] = useState<string[]>([]);
+  const [tiktokYear, setTiktokYear] = useState<string[]>([]);
+  const [tiktokMonth, setTiktokMonth] = useState<string[]>([]);
   
   const { 
     data: instagramData, 
@@ -146,8 +146,8 @@ const SocialMedia = () => {
     const filteredData = igData.filter(row => {
       const [month, , year] = row.published_date.split("/");
       return (
-        (instagramYear === "all" || year === instagramYear) &&
-        (instagramMonth === "all" || month === instagramMonth)
+        (instagramYear.length === 0 || instagramYear.includes(year)) &&
+        (instagramMonth.length === 0 || instagramMonth.includes(month))
       );
     });
 
@@ -196,8 +196,8 @@ const SocialMedia = () => {
     const filteredData = ttData.filter(row => {
       const [month, , year] = row.published_date.split("/");
       return (
-        (tiktokYear === "all" || year === tiktokYear) &&
-        (tiktokMonth === "all" || month === tiktokMonth)
+        (tiktokYear.length === 0 || tiktokYear.includes(year)) &&
+        (tiktokMonth.length === 0 || tiktokMonth.includes(month))
       );
     });
 
@@ -266,31 +266,28 @@ const SocialMedia = () => {
           <div className="flex flex-wrap gap-4 items-start">
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Year</label>
-              <Select value={instagramYear} onValueChange={setInstagramYear}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="All Years" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {instagramYears.map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={instagramYears}
+                selected={instagramYear}
+                onChange={setInstagramYear}
+                placeholder="All Years"
+                className="w-full"
+              />
             </div>
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Month</label>
-              <Select value={instagramMonth} onValueChange={setInstagramMonth}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="All Months" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Months</SelectItem>
-                  {instagramMonths.map(month => (
-                    <SelectItem key={month} value={month}>{MONTH_NAMES[Number(month) - 1]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={instagramMonths.map(month => MONTH_NAMES[Number(month) - 1])}
+                selected={instagramMonth.map(month => MONTH_NAMES[Number(month) - 1])}
+                onChange={(selectedMonthNames) => {
+                  const selectedMonthNumbers = selectedMonthNames.map(name => 
+                    String(MONTH_NAMES.indexOf(name) + 1)
+                  );
+                  setInstagramMonth(selectedMonthNumbers);
+                }}
+                placeholder="All Months"
+                className="w-full"
+              />
             </div>
           </div>
         </div>
@@ -911,31 +908,28 @@ const SocialMedia = () => {
           <div className="flex flex-wrap gap-4 items-start">
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Year</label>
-              <Select value={tiktokYear} onValueChange={setTiktokYear}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="All Years" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {tiktokYears.map(year => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={tiktokYears}
+                selected={tiktokYear}
+                onChange={setTiktokYear}
+                placeholder="All Years"
+                className="w-full"
+              />
             </div>
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Month</label>
-              <Select value={tiktokMonth} onValueChange={setTiktokMonth}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="All Months" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Months</SelectItem>
-                  {tiktokMonths.map(month => (
-                    <SelectItem key={month} value={month}>{MONTH_NAMES[Number(month) - 1]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelect
+                options={tiktokMonths.map(month => MONTH_NAMES[Number(month) - 1])}
+                selected={tiktokMonth.map(month => MONTH_NAMES[Number(month) - 1])}
+                onChange={(selectedMonthNames) => {
+                  const selectedMonthNumbers = selectedMonthNames.map(name => 
+                    String(MONTH_NAMES.indexOf(name) + 1)
+                  );
+                  setTiktokMonth(selectedMonthNumbers);
+                }}
+                placeholder="All Months"
+                className="w-full"
+              />
             </div>
           </div>
         </div>

@@ -39,6 +39,7 @@ export function MultiSelect({
     } else {
       onChange(options);
     }
+    // Keep popover open after selection
     setOpen(true);
   };
 
@@ -48,7 +49,19 @@ export function MultiSelect({
     } else {
       onChange([...selected, option]);
     }
+    // Keep popover open after selection
     setOpen(true);
+  };
+
+  // Prevent auto-close on internal interactions
+  const handleOpenChange = (newOpen: boolean) => {
+    // Only allow closing when explicitly triggered (clicking outside, escape, or trigger button)
+    // Don't auto-close on internal interactions
+    if (!newOpen) {
+      setOpen(false);
+    } else {
+      setOpen(true);
+    }
   };
 
   const allSelected = selected.length === options.length;
@@ -56,7 +69,7 @@ export function MultiSelect({
 
   return (
     <div className={cn("w-full", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -64,6 +77,7 @@ export function MultiSelect({
             aria-expanded={open}
             className="w-full justify-between text-left font-normal rounded-xl border-border"
             disabled={disabled}
+            onClick={() => setOpen(!open)}
           >
             <span className="truncate">
               {selected.length === 0
@@ -79,6 +93,10 @@ export function MultiSelect({
           className="w-full p-0 bg-white border-border rounded-xl z-[9999]" 
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => {
+            setOpen(false);
+          }}
+          onEscapeKeyDown={() => setOpen(false)}
         >
           <div className="flex items-center border-b border-border px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -92,16 +110,18 @@ export function MultiSelect({
           
           <div className="border-b border-border">
             <div 
-              className="flex items-center space-x-2 p-3 hover:bg-muted/30"
+              className="flex items-center space-x-2 p-3 hover:bg-muted/30 cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelectAll();
+              }}
             >
               <Checkbox
                 id="select-all"
                 checked={allSelected}
                 onCheckedChange={() => {
-                  handleSelectAll();
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
+                  // Handled by parent div onClick
                 }}
                 className={cn(
                   someSelected && !allSelected && "data-[state=checked]:bg-muted"
@@ -109,12 +129,7 @@ export function MultiSelect({
               />
               <label
                 htmlFor="select-all"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSelectAll();
-                }}
+                className="text-sm font-medium leading-none cursor-pointer flex-1"
               >
                 {allSelected ? "Deselect All" : "Select All"}
               </label>
@@ -130,25 +145,20 @@ export function MultiSelect({
               filteredOptions.map((option) => (
                 <div
                   key={option}
-                  className="flex items-center space-x-2 p-3 hover:bg-muted/50"
+                  className="flex items-center space-x-2 p-3 hover:bg-muted/50 cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleOption(option);
+                  }}
                 >
                   <Checkbox
                     checked={selected.includes(option)}
-                    onCheckedChange={(checked) => {
+                    onCheckedChange={() => {
                       handleToggleOption(option);
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
                     }}
                   />
-                  <label 
-                    className="text-sm flex-1 cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleToggleOption(option);
-                    }}
-                  >
+                  <label className="text-sm flex-1 cursor-pointer">
                     {option}
                   </label>
                 </div>

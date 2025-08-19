@@ -26,6 +26,18 @@ interface SpendImpressionsByBrandProps {
   title?: string;
 }
 
+interface TooltipPayload {
+  dataKey: string;
+  value: number;
+  color: string;
+  payload: {
+    year: string;
+    _impressions: Record<string, number>;
+    _totalSpend: number;
+    [brand: string]: string | number | Record<string, number>;
+  };
+}
+
 const BRAND_COLORS = [
   "hsl(345, 100%, 70%)", // blush-pink
   "hsl(45, 100%, 70%)",  // pale-yellow  
@@ -89,12 +101,12 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
       acc[year]._totalSpend += row["spend (usd)"];
       
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, { year: string; _impressions: Record<string, number>; _totalSpend: number; [brand: string]: number }>);
 
     // Sort brands within each year by their individual year values
     return Object.values(yearData)
-      .sort((a: any, b: any) => a.year.localeCompare(b.year))
-      .map((yearData: any) => {
+      .sort((a, b) => String(a.year).localeCompare(String(b.year)))
+      .map((yearData) => {
         const sortedYearData = { 
           year: yearData.year, 
           _impressions: yearData._impressions,
@@ -116,13 +128,13 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
   }, [data]);
 
   const spendTableData = useMemo(() => {
-    return spendChartData.map((yearData: any) => {
-      const row: any = { Year: yearData.year };
+    return spendChartData.map((yearData) => {
+      const row: Record<string, string | number> = { Year: yearData.year };
       selectedSpendBrands.forEach(brand => {
         row[brand] = yearData[brand] || 0;
       });
       return row;
-    }).sort((a, b) => a.Year.localeCompare(b.Year));
+    }).sort((a, b) => String(a.Year).localeCompare(String(b.Year)));
   }, [spendChartData, selectedSpendBrands]);
 
   const spendTableColumns = useMemo(() => {
@@ -137,7 +149,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
     return columns;
   }, [selectedSpendBrands]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) => {
     if (active && payload && payload.length > 0) {
       // Get the specific bar data that's being hovered
       const hoveredEntry = payload[0];
@@ -147,7 +159,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
       const yearData = hoveredEntry.payload;
       const totalSpend = yearData._totalSpend;
       const impressions = yearData._impressions[brand] || 0;
-      const totalImpressions = Object.values(yearData._impressions).reduce((sum: number, val: any) => sum + (val || 0), 0);
+      const totalImpressions = Object.values(yearData._impressions).reduce((sum: number, val: number) => sum + (val || 0), 0);
       const spendPercentage = totalSpend > 0 ? (spend / totalSpend) * 100 : 0;
       const impressionsPercentage = totalImpressions > 0 ? (impressions / totalImpressions) * 100 : 0;
 
@@ -201,7 +213,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
   };
 
   // Custom label component for Avent bars
-  const AventLabel = (props: any) => {
+  const AventLabel = (props: { x: number; y: number; width: number; value: number }) => {
     const { x, y, width, value } = props;
     
     // Only show if there's a value
