@@ -99,10 +99,10 @@ const SocialMedia = () => {
   const [instagramPostTypeSelectedCompanies, setInstagramPostTypeSelectedCompanies] = useState<string[]>([]);
   const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
   const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
-  const [instagramYear, setInstagramYear] = useState("");
-  const [instagramMonth, setInstagramMonth] = useState("");
-  const [tiktokYear, setTiktokYear] = useState("");
-  const [tiktokMonth, setTiktokMonth] = useState("");
+  const [instagramYear, setInstagramYear] = useState("all");
+  const [instagramMonth, setInstagramMonth] = useState("all");
+  const [tiktokYear, setTiktokYear] = useState("all");
+  const [tiktokMonth, setTiktokMonth] = useState("all");
   
   const { 
     data: instagramData, 
@@ -146,8 +146,8 @@ const SocialMedia = () => {
     const filteredData = igData.filter(row => {
       const [month, , year] = row.published_date.split("/");
       return (
-        (instagramYear === "" || year === instagramYear) &&
-        (instagramMonth === "" || month === instagramMonth)
+        (instagramYear === "all" || year === instagramYear) &&
+        (instagramMonth === "all" || month === instagramMonth)
       );
     });
 
@@ -196,8 +196,8 @@ const SocialMedia = () => {
     const filteredData = ttData.filter(row => {
       const [month, , year] = row.published_date.split("/");
       return (
-        (tiktokYear === "" || year === tiktokYear) &&
-        (tiktokMonth === "" || month === tiktokMonth)
+        (tiktokYear === "all" || year === tiktokYear) &&
+        (tiktokMonth === "all" || month === tiktokMonth)
       );
     });
 
@@ -271,7 +271,7 @@ const SocialMedia = () => {
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   {instagramYears.map(year => (
                     <SelectItem key={year} value={year}>{year}</SelectItem>
                   ))}
@@ -285,7 +285,7 @@ const SocialMedia = () => {
                   <SelectValue placeholder="All Months" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Months</SelectItem>
+                  <SelectItem value="all">All Months</SelectItem>
                   {instagramMonths.map(month => (
                     <SelectItem key={month} value={month}>{MONTH_NAMES[Number(month) - 1]}</SelectItem>
                   ))}
@@ -295,8 +295,9 @@ const SocialMedia = () => {
           </div>
         </div>
 
-        {/* Metrics Company Filter */}
-        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+        {/* Metrics Section with Company Filter */}
+        <div className="bg-soft-rose border border-border shadow-soft rounded-2xl p-6 space-y-6">
+          {/* Metrics Company Filter */}
           <div className="flex flex-wrap gap-4 items-start">
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Company</label>
@@ -309,124 +310,124 @@ const SocialMedia = () => {
               />
             </div>
           </div>
-        </div>
 
-        {/* Top Row - 4 metrics centered */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-pink-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-pink-600 capitalize tracking-wide">Posts</p>
-                  <p className="text-2xl font-bold text-pink-800 tracking-tight">{igMetricsData.length.toLocaleString()}</p>
+          {/* Top Row - 4 metrics centered */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-white border-pink-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-pink-600 capitalize tracking-wide">Posts</p>
+                    <p className="text-2xl font-bold text-pink-800 tracking-tight">{igMetricsData.length.toLocaleString()}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-pink-200 rounded-xl flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-pink-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-pink-200 rounded-xl flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-pink-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-red-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-red-600 capitalize tracking-wide">Likes</p>
-                  <p className="text-2xl font-bold text-red-800 tracking-tight">{formatNumber(totalLikes)}</p>
+            <Card className="bg-white border-red-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-red-600 capitalize tracking-wide">Likes</p>
+                    <p className="text-2xl font-bold text-red-800 tracking-tight">{formatNumber(totalLikes)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-red-200 rounded-xl flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-red-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-red-200 rounded-xl flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-red-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-blue-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-600 capitalize tracking-wide">Comments</p>
-                  <p className="text-2xl font-bold text-blue-800 tracking-tight">{formatNumber(totalComments)}</p>
+            <Card className="bg-white border-blue-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600 capitalize tracking-wide">Comments</p>
+                    <p className="text-2xl font-bold text-blue-800 tracking-tight">{formatNumber(totalComments)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-blue-200 rounded-xl flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-blue-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-blue-200 rounded-xl flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-blue-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-green-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600 capitalize tracking-wide">Impressions</p>
-                  <p className="text-2xl font-bold text-green-800 tracking-tight">{formatNumber(totalImpressions)}</p>
+            <Card className="bg-white border-green-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-600 capitalize tracking-wide">Impressions</p>
+                    <p className="text-2xl font-bold text-green-800 tracking-tight">{formatNumber(totalImpressions)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-green-200 rounded-xl flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-green-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-green-200 rounded-xl flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-green-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Bottom Row - 4 metrics centered */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Avg Engagement Rate</p>
-                  <p className="text-2xl font-bold text-purple-800 tracking-tight">{(avgEngagementRate * 100).toFixed(2)}%</p>
+          {/* Bottom Row - 4 metrics centered */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Avg Engagement Rate</p>
+                    <p className="text-2xl font-bold text-purple-800 tracking-tight">{(avgEngagementRate * 100).toFixed(2)}%</p>
+                  </div>
+                  <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-purple-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-purple-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Engagement</p>
-                  <p className="text-2xl font-bold text-indigo-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
+            <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Engagement</p>
+                    <p className="text-2xl font-bold text-indigo-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
+                  </div>
+                  <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-indigo-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-indigo-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-orange-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-orange-600 capitalize tracking-wide">Unique Brands</p>
-                  <p className="text-2xl font-bold text-orange-800 tracking-tight">{uniqueCompanies}</p>
+            <Card className="bg-white border-orange-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-orange-600 capitalize tracking-wide">Unique Brands</p>
+                    <p className="text-2xl font-bold text-orange-800 tracking-tight">{uniqueCompanies}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-orange-200 rounded-xl flex items-center justify-center">
+                    <Users className="w-5 h-5 text-orange-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-orange-200 rounded-xl flex items-center justify-center">
-                  <Users className="w-5 h-5 text-orange-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-teal-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-teal-600 capitalize tracking-wide">Post Types</p>
-                  <p className="text-2xl font-bold text-teal-800 tracking-tight">{new Set(igMetricsData.map(row => row.post_type)).size}</p>
+            <Card className="bg-white border-teal-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-teal-600 capitalize tracking-wide">Post Types</p>
+                    <p className="text-2xl font-bold text-teal-800 tracking-tight">{new Set(igMetricsData.map(row => row.post_type)).size}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
+                    <Video className="w-5 h-5 text-teal-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
-                  <Video className="w-5 h-5 text-teal-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Charts Section */}
@@ -798,11 +799,17 @@ const SocialMedia = () => {
                       {post.post_link ? (
                         <iframe
                           src={`${post.post_link}embed/`}
-                          className="w-full h-full"
-                          frameBorder="0"
+                          className="w-full h-full border-0"
+                          style={{ border: 0 }}
                           scrolling="no"
-                          allowTransparency={true}
                           title={`Instagram post by ${post.presence_handle}`}
+                          onError={() => {
+                            // Silently handle embed failures
+                            console.log(`Instagram embed failed for post: ${post.post_link}`);
+                          }}
+                          onLoad={() => {
+                            // Optional: Handle successful loads
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-pink-100 to-rose-200 flex items-center justify-center">
@@ -909,7 +916,7 @@ const SocialMedia = () => {
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Years</SelectItem>
+                  <SelectItem value="all">All Years</SelectItem>
                   {tiktokYears.map(year => (
                     <SelectItem key={year} value={year}>{year}</SelectItem>
                   ))}
@@ -923,7 +930,7 @@ const SocialMedia = () => {
                   <SelectValue placeholder="All Months" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Months</SelectItem>
+                  <SelectItem value="all">All Months</SelectItem>
                   {tiktokMonths.map(month => (
                     <SelectItem key={month} value={month}>{MONTH_NAMES[Number(month) - 1]}</SelectItem>
                   ))}
@@ -933,8 +940,9 @@ const SocialMedia = () => {
           </div>
         </div>
 
-        {/* Metrics Company Filter */}
-        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+        {/* TikTok Metrics Container */}
+        <div className="bg-soft-rose border border-border shadow-soft rounded-2xl p-6 space-y-6">
+          {/* Metrics Company Filter */}
           <div className="flex flex-wrap gap-4 items-start">
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Company</label>
@@ -947,124 +955,124 @@ const SocialMedia = () => {
               />
             </div>
           </div>
-        </div>
 
-        {/* Top Row - 4 metrics centered */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-[#ff0050]/30 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-[#ff0050] capitalize tracking-wide">Videos</p>
-                  <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{ttMetricsData.length.toLocaleString()}</p>
+          {/* Top Row - 4 metrics centered */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-white border-[#ff0050]/30 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-[#ff0050] capitalize tracking-wide">Videos</p>
+                    <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{ttMetricsData.length.toLocaleString()}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-[#ff0050]/10 rounded-xl flex items-center justify-center">
+                    <TikTokIcon className="w-5 h-5 text-[#ff0050]" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-[#ff0050]/10 rounded-xl flex items-center justify-center">
-                  <TikTokIcon className="w-5 h-5 text-[#ff0050]" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-[#00f2ea]/30 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-[#00f2ea] capitalize tracking-wide">Views</p>
-                  <p className="text-2xl font-bold text-[#00f2ea] tracking-tight">{formatNumber(totalViews)}</p>
+            <Card className="bg-white border-[#00f2ea]/30 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-[#00f2ea] capitalize tracking-wide">Views</p>
+                    <p className="text-2xl font-bold text-[#00f2ea] tracking-tight">{formatNumber(totalViews)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-[#00f2ea]/10 rounded-xl flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-[#00f2ea]" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-[#00f2ea]/10 rounded-xl flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-[#00f2ea]" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-rose-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-rose-600 capitalize tracking-wide">Likes</p>
-                  <p className="text-2xl font-bold text-rose-800 tracking-tight">{formatNumber(totalLikes)}</p>
+            <Card className="bg-white border-rose-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-rose-600 capitalize tracking-wide">Likes</p>
+                    <p className="text-2xl font-bold text-rose-800 tracking-tight">{formatNumber(totalLikes)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-rose-200 rounded-xl flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-rose-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-rose-200 rounded-xl flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-rose-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Comments</p>
-                  <p className="text-2xl font-bold text-indigo-800 tracking-tight">{formatNumber(totalComments)}</p>
+            <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-indigo-600 capitalize tracking-wide">Comments</p>
+                    <p className="text-2xl font-bold text-indigo-800 tracking-tight">{formatNumber(totalComments)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-indigo-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-indigo-200 rounded-xl flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-indigo-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Bottom Row - 4 metrics centered */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-white border-emerald-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-emerald-600 capitalize tracking-wide">Shares</p>
-                  <p className="text-2xl font-bold text-emerald-800 tracking-tight">{formatNumber(totalShares)}</p>
+          {/* Bottom Row - 4 metrics centered */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="bg-white border-emerald-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-emerald-600 capitalize tracking-wide">Shares</p>
+                    <p className="text-2xl font-bold text-emerald-800 tracking-tight">{formatNumber(totalShares)}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-emerald-200 rounded-xl flex items-center justify-center">
+                    <Share2 className="w-5 h-5 text-emerald-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-emerald-200 rounded-xl flex items-center justify-center">
-                  <Share2 className="w-5 h-5 text-emerald-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-amber-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-amber-600 capitalize tracking-wide">Avg Engagement Rate</p>
-                  <p className="text-2xl font-bold text-amber-800 tracking-tight">{(avgEngagementRate * 100).toFixed(2)}%</p>
+            <Card className="bg-white border-amber-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-amber-600 capitalize tracking-wide">Avg Engagement Rate</p>
+                    <p className="text-2xl font-bold text-amber-800 tracking-tight">{(avgEngagementRate * 100).toFixed(2)}%</p>
+                  </div>
+                  <div className="w-10 h-10 bg-amber-200 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-amber-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-amber-200 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-amber-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Engagement</p>
-                  <p className="text-2xl font-bold text-purple-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
+            <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-purple-600 capitalize tracking-wide">Engagement</p>
+                    <p className="text-2xl font-bold text-purple-800 tracking-tight">{(totalEngagement / 1000000).toFixed(2)}M</p>
+                  </div>
+                  <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-purple-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-purple-200 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-purple-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-teal-200 shadow-soft rounded-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-teal-600 capitalize tracking-wide">Unique Brands</p>
-                  <p className="text-2xl font-bold text-teal-800 tracking-tight">{uniqueCompanies}</p>
+            <Card className="bg-white border-teal-200 shadow-soft rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-teal-600 capitalize tracking-wide">Unique Brands</p>
+                    <p className="text-2xl font-bold text-teal-800 tracking-tight">{uniqueCompanies}</p>
+                  </div>
+                  <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
+                    <Users className="w-5 h-5 text-teal-700" />
+                  </div>
                 </div>
-                <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
-                  <Users className="w-5 h-5 text-teal-700" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Charts Section */}
@@ -1447,12 +1455,19 @@ const SocialMedia = () => {
                         {video.post_link ? (
                           <iframe
                             src={`https://www.tiktok.com/embed/v2/${video.post_link.split('/').pop()}`}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title={`TikTok video by ${video.presence_handle}`}
-                        />
+                            className="w-full h-full border-0"
+                            style={{ border: 0 }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={`TikTok video by ${video.presence_handle}`}
+                            onError={() => {
+                              // Silently handle embed failures
+                              console.log(`TikTok embed failed for video: ${video.post_link}`);
+                            }}
+                            onLoad={() => {
+                              // Optional: Handle successful loads
+                            }}
+                          />
                         ) : (
                         <div className="w-full h-full bg-gradient-to-br from-[#ff0050]/20 to-[#00f2ea]/20 flex items-center justify-center">
                           <div className="text-center">

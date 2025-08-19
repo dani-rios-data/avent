@@ -44,6 +44,7 @@ All colors MUST be HSL.
     --cream: 0 45.45% 97.84%;
     --warm-white: 35 10% 99%;
     --soft-sage: 120 15% 90%;
+    --soft-rose: 350 30% 96%;
     
     /* Gradients */
     --gradient-baby: linear-gradient(135deg, hsl(var(--warm-cream)), hsl(var(--gentle-mint)));
