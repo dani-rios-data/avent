@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieCha
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatNumber } from "@/lib/utils";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Custom TikTok Icon Component
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -18,6 +19,21 @@ const TikTokIcon = ({ className }: { className?: string }) => (
     <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
   </svg>
 );
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
 
 interface InstagramDataRow {
   published_date: string;
@@ -78,11 +94,15 @@ interface TikTokDataRow {
 
 const SocialMedia = () => {
   const [activeTab, setActiveTab] = useState("instagram");
-  const [instagramSummarySelectedCompanies, setInstagramSummarySelectedCompanies] = useState<string[]>([]);
-  const [tiktokSummarySelectedCompanies, setTiktokSummarySelectedCompanies] = useState<string[]>([]);
+  const [instagramMetricsSelectedCompanies, setInstagramMetricsSelectedCompanies] = useState<string[]>([]);
+  const [tiktokMetricsSelectedCompanies, setTiktokMetricsSelectedCompanies] = useState<string[]>([]);
   const [instagramPostTypeSelectedCompanies, setInstagramPostTypeSelectedCompanies] = useState<string[]>([]);
   const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
   const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
+  const [instagramYear, setInstagramYear] = useState("");
+  const [instagramMonth, setInstagramMonth] = useState("");
+  const [tiktokYear, setTiktokYear] = useState("");
+  const [tiktokMonth, setTiktokMonth] = useState("");
   
   const { 
     data: instagramData, 
@@ -96,59 +116,105 @@ const SocialMedia = () => {
     error: tiktokError 
   } = useCSVData("/SM_TikTok_Breast_Pump_Brands.csv");
 
-  // Extract unique companies from Instagram dataset
-  const { instagramUniqueCompanies, filteredInstagramData } = useMemo(() => {
+  // Extract unique values and filter Instagram dataset by year and month
+  const {
+    instagramUniqueCompanies,
+    instagramYears,
+    instagramMonths,
+    filteredInstagramData
+  } = useMemo(() => {
     const igData = instagramData as unknown as InstagramDataRow[];
 
-    if (!igData) return { instagramUniqueCompanies: [], filteredInstagramData: [] };
+    if (!igData) {
+      return {
+        instagramUniqueCompanies: [],
+        instagramYears: [],
+        instagramMonths: [],
+        filteredInstagramData: []
+      };
+    }
 
-    const companies = new Set<string>();
+    const years = new Set<string>();
+    const months = new Set<string>();
+
     igData.forEach(row => {
-      if (row.company) {
-        companies.add(row.company);
-      }
+      const [month, , year] = row.published_date.split("/");
+      if (year) years.add(year);
+      if (month) months.add(month);
     });
-    const sortedCompanies = Array.from(companies).sort();
 
     const filteredData = igData.filter(row => {
+      const [month, , year] = row.published_date.split("/");
       return (
-        instagramSummarySelectedCompanies.length === 0 ||
-        instagramSummarySelectedCompanies.includes(row.company)
+        (instagramYear === "" || year === instagramYear) &&
+        (instagramMonth === "" || month === instagramMonth)
       );
     });
 
-    return {
-      instagramUniqueCompanies: sortedCompanies,
-      filteredInstagramData: filteredData
-    };
-  }, [instagramData, instagramSummarySelectedCompanies]);
-
-  // Extract unique companies from TikTok dataset
-  const { tiktokUniqueCompanies, filteredTikTokData } = useMemo(() => {
-    const ttData = tiktokData as unknown as TikTokDataRow[];
-
-    if (!ttData) return { tiktokUniqueCompanies: [], filteredTikTokData: [] };
-
     const companies = new Set<string>();
-    ttData.forEach(row => {
+    filteredData.forEach(row => {
       if (row.company) {
         companies.add(row.company);
       }
     });
-    const sortedCompanies = Array.from(companies).sort();
+
+    return {
+      instagramUniqueCompanies: Array.from(companies).sort(),
+      instagramYears: Array.from(years).sort(),
+      instagramMonths: Array.from(months).sort((a, b) => Number(a) - Number(b)),
+      filteredInstagramData: filteredData
+    };
+  }, [instagramData, instagramYear, instagramMonth]);
+
+  // Extract unique values and filter TikTok dataset by year and month
+  const {
+    tiktokUniqueCompanies,
+    tiktokYears,
+    tiktokMonths,
+    filteredTikTokData
+  } = useMemo(() => {
+    const ttData = tiktokData as unknown as TikTokDataRow[];
+
+    if (!ttData) {
+      return {
+        tiktokUniqueCompanies: [],
+        tiktokYears: [],
+        tiktokMonths: [],
+        filteredTikTokData: []
+      };
+    }
+
+    const years = new Set<string>();
+    const months = new Set<string>();
+
+    ttData.forEach(row => {
+      const [month, , year] = row.published_date.split("/");
+      if (year) years.add(year);
+      if (month) months.add(month);
+    });
 
     const filteredData = ttData.filter(row => {
+      const [month, , year] = row.published_date.split("/");
       return (
-        tiktokSummarySelectedCompanies.length === 0 ||
-        tiktokSummarySelectedCompanies.includes(row.company)
+        (tiktokYear === "" || year === tiktokYear) &&
+        (tiktokMonth === "" || month === tiktokMonth)
       );
     });
 
+    const companies = new Set<string>();
+    filteredData.forEach(row => {
+      if (row.company) {
+        companies.add(row.company);
+      }
+    });
+
     return {
-      tiktokUniqueCompanies: sortedCompanies,
+      tiktokUniqueCompanies: Array.from(companies).sort(),
+      tiktokYears: Array.from(years).sort(),
+      tiktokMonths: Array.from(months).sort((a, b) => Number(a) - Number(b)),
       filteredTikTokData: filteredData
     };
-  }, [tiktokData, tiktokSummarySelectedCompanies]);
+  }, [tiktokData, tiktokYear, tiktokMonth]);
 
   if (instagramLoading || tiktokLoading) {
     return (
@@ -178,17 +244,20 @@ const SocialMedia = () => {
 
   const InstagramSection = () => {
     const igData = filteredInstagramData;
-    
-    // Calculate improved metrics with proper number parsing
-    const totalEngagement = igData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
-    const totalLikes = igData.reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
-    const totalComments = igData.reduce((sum, row) => sum + (Number(row.comments) || 0), 0);
-    const totalImpressions = igData.reduce((sum, row) => sum + (Number(row.estimated_impressions) || 0), 0);
-    const avgEngagementRate = igData.length > 0 
-      ? igData.reduce((sum, row) => sum + (Number(row.engagement_rate_by_follower) || 0), 0) / igData.length 
-      : 0;
-    const uniqueCompanies = new Set(igData.map(row => row.company)).size;
+    const igMetricsData =
+      instagramMetricsSelectedCompanies.length === 0
+        ? igData
+        : igData.filter(row => instagramMetricsSelectedCompanies.includes(row.company));
 
+    // Calculate improved metrics with proper number parsing
+    const totalEngagement = igMetricsData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
+    const totalLikes = igMetricsData.reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
+    const totalComments = igMetricsData.reduce((sum, row) => sum + (Number(row.comments) || 0), 0);
+    const totalImpressions = igMetricsData.reduce((sum, row) => sum + (Number(row.estimated_impressions) || 0), 0);
+    const avgEngagementRate = igMetricsData.length > 0
+      ? igMetricsData.reduce((sum, row) => sum + (Number(row.engagement_rate_by_follower) || 0), 0) / igMetricsData.length
+      : 0;
+    const uniqueCompanies = new Set(igMetricsData.map(row => row.company)).size;
 
     return (
       <div className="space-y-6">
@@ -196,11 +265,45 @@ const SocialMedia = () => {
         <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
           <div className="flex flex-wrap gap-4 items-start">
             <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Year</label>
+              <Select value={instagramYear} onValueChange={setInstagramYear}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Years</SelectItem>
+                  {instagramYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Month</label>
+              <Select value={instagramMonth} onValueChange={setInstagramMonth}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Months</SelectItem>
+                  {instagramMonths.map(month => (
+                    <SelectItem key={month} value={month}>{MONTH_NAMES[Number(month) - 1]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics Company Filter */}
+        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+          <div className="flex flex-wrap gap-4 items-start">
+            <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
                 options={instagramUniqueCompanies}
-                selected={instagramSummarySelectedCompanies}
-                onChange={setInstagramSummarySelectedCompanies}
+                selected={instagramMetricsSelectedCompanies}
+                onChange={setInstagramMetricsSelectedCompanies}
                 placeholder="All Companies"
                 className="w-full"
               />
@@ -215,7 +318,7 @@ const SocialMedia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-pink-600 capitalize tracking-wide">Posts</p>
-                  <p className="text-2xl font-bold text-pink-800 tracking-tight">{igData.length.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-pink-800 tracking-tight">{igMetricsData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-pink-200 rounded-xl flex items-center justify-center">
                   <FileText className="w-5 h-5 text-pink-700" />
@@ -223,7 +326,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-red-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -237,7 +340,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-blue-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -251,7 +354,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-green-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -282,7 +385,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -296,7 +399,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-orange-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -316,7 +419,7 @@ const SocialMedia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-teal-600 capitalize tracking-wide">Post Types</p>
-                  <p className="text-2xl font-bold text-teal-800 tracking-tight">{new Set(igData.map(row => row.post_type)).size}</p>
+                  <p className="text-2xl font-bold text-teal-800 tracking-tight">{new Set(igMetricsData.map(row => row.post_type)).size}</p>
                 </div>
                 <div className="w-10 h-10 bg-teal-200 rounded-xl flex items-center justify-center">
                   <Video className="w-5 h-5 text-teal-700" />
@@ -778,18 +881,21 @@ const SocialMedia = () => {
 
   const TikTokSection = () => {
     const ttData = filteredTikTokData;
-    
-    // Calculate improved metrics with proper number parsing
-    const totalEngagement = ttData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
-    const totalViews = ttData.reduce((sum, row) => sum + (Number(row.views) || 0), 0);
-    const totalLikes = ttData.reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
-    const totalComments = ttData.reduce((sum, row) => sum + (Number(row.comments) || 0), 0);
-    const totalShares = ttData.reduce((sum, row) => sum + (Number(row.shares) || 0), 0);
-    const avgEngagementRate = ttData.length > 0 
-      ? ttData.reduce((sum, row) => sum + (Number(row.engagement_rate_by_view) || 0), 0) / ttData.length 
-      : 0;
-    const uniqueCompanies = new Set(ttData.map(row => row.company)).size;
+    const ttMetricsData =
+      tiktokMetricsSelectedCompanies.length === 0
+        ? ttData
+        : ttData.filter(row => tiktokMetricsSelectedCompanies.includes(row.company));
 
+    // Calculate improved metrics with proper number parsing
+    const totalEngagement = ttMetricsData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
+    const totalViews = ttMetricsData.reduce((sum, row) => sum + (Number(row.views) || 0), 0);
+    const totalLikes = ttMetricsData.reduce((sum, row) => sum + (Number(row.likes) || 0), 0);
+    const totalComments = ttMetricsData.reduce((sum, row) => sum + (Number(row.comments) || 0), 0);
+    const totalShares = ttMetricsData.reduce((sum, row) => sum + (Number(row.shares) || 0), 0);
+    const avgEngagementRate = ttMetricsData.length > 0
+      ? ttMetricsData.reduce((sum, row) => sum + (Number(row.engagement_rate_by_view) || 0), 0) / ttMetricsData.length
+      : 0;
+    const uniqueCompanies = new Set(ttMetricsData.map(row => row.company)).size;
 
     return (
       <div className="space-y-6">
@@ -797,11 +903,45 @@ const SocialMedia = () => {
         <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
           <div className="flex flex-wrap gap-4 items-start">
             <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Year</label>
+              <Select value={tiktokYear} onValueChange={setTiktokYear}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Years</SelectItem>
+                  {tiktokYears.map(year => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">Month</label>
+              <Select value={tiktokMonth} onValueChange={setTiktokMonth}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Months</SelectItem>
+                  {tiktokMonths.map(month => (
+                    <SelectItem key={month} value={month}>{MONTH_NAMES[Number(month) - 1]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics Company Filter */}
+        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+          <div className="flex flex-wrap gap-4 items-start">
+            <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
                 options={tiktokUniqueCompanies}
-                selected={tiktokSummarySelectedCompanies}
-                onChange={setTiktokSummarySelectedCompanies}
+                selected={tiktokMetricsSelectedCompanies}
+                onChange={setTiktokMetricsSelectedCompanies}
                 placeholder="All Companies"
                 className="w-full"
               />
@@ -816,7 +956,7 @@ const SocialMedia = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-[#ff0050] capitalize tracking-wide">Videos</p>
-                  <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{ttData.length.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-[#ff0050] tracking-tight">{ttMetricsData.length.toLocaleString()}</p>
                 </div>
                 <div className="w-10 h-10 bg-[#ff0050]/10 rounded-xl flex items-center justify-center">
                   <TikTokIcon className="w-5 h-5 text-[#ff0050]" />
@@ -838,7 +978,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-rose-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -852,7 +992,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-indigo-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -883,7 +1023,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-amber-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -897,7 +1037,7 @@ const SocialMedia = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="bg-white border-purple-200 shadow-soft rounded-2xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
