@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { MultiSelectWithTotals } from "@/components/ui/multi-select-with-totals";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ interface DataRow {
 
 interface ConsolidatedInvestmentDistributionProps {
   data: DataRow[];
+  tabId?: string;
 }
 
 const CHART_COLORS = [
@@ -43,11 +45,22 @@ const CHART_COLORS = [
   "#DBEAFE", // blue-200 - azul muy suave
 ];
 
-const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDistributionProps) => {
+const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: ConsolidatedInvestmentDistributionProps) => {
   const [activeTab, setActiveTab] = useState("channels");
   const [leftChartBrands, setLeftChartBrands] = useState<string[]>([]);
   const [rightChartBrands, setRightChartBrands] = useState<string[]>([]);
   const [publishersSelectedBrands, setPublishersSelectedBrands] = useState<string[]>([]);
+  const [isLeftChartInitialized, setIsLeftChartInitialized] = useState(false);
+  const [isRightChartInitialized, setIsRightChartInitialized] = useState(false);
+  const [isPublishersInitialized, setIsPublishersInitialized] = useState(false);
+
+  // Log mount/unmount events only
+  useEffect(() => {
+    console.log(`🔄 ConsolidatedInvestmentDistribution MOUNTED - TabId: ${tabId}`);
+    return () => {
+      console.log(`💀 ConsolidatedInvestmentDistribution UNMOUNTED - TabId: ${tabId}`);
+    };
+  }, [tabId]);
 
   // Use data directly since it's already filtered by global selectors
   const yearFilteredData = data;
@@ -58,37 +71,79 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
     return brands.sort();
   }, [yearFilteredData]);
 
-  // Initialize defaults: All Brands vs Avent or top brand if Avent is missing
-  const uniqueBrandsKey = uniqueBrands.join(',');
+  // Calculate brands with total spend for MultiSelectWithTotals - create independent references
+  const createBrandsWithSpend = useCallback(() => {
+    const spendByBrand = yearFilteredData.reduce((acc, row) => {
+      const brand = row["brand root"];
+      const spend = Number(row["spend (usd)"]) || 0;
+      acc[brand] = (acc[brand] || 0) + spend;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return uniqueBrands.map(brand => ({
+      brand,
+      totalSpend: spendByBrand[brand] || 0
+    })).sort((a, b) => b.totalSpend - a.totalSpend);
+  }, [yearFilteredData, uniqueBrands]);
+
+  // Create independent copies for each selector to prevent cross-interference
+  const leftBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const rightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const publishersBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+
+  // Initialize defaults independently for each selector
   useEffect(() => {
-    if (uniqueBrands.length > 0) {
-      if (leftChartBrands.length === 0) {
-        setLeftChartBrands([]); // All brands by default (empty array means all)
-      }
-      if (rightChartBrands.length === 0) {
-        const aventBrands = uniqueBrands.filter(brand =>
-          brand.toLowerCase().includes("avent")
-        );
-        if (aventBrands.length > 0) {
-          setRightChartBrands([aventBrands[0]]);
-        } else {
-          // Find brand with highest total spend
-          const spendByBrand = yearFilteredData.reduce((acc, row) => {
-            const brand = row["brand root"];
-            const spend = Number(row["spend (usd)"]) || 0;
-            acc[brand] = (acc[brand] || 0) + spend;
-            return acc;
-          }, {} as Record<string, number>);
-          const topBrand = Object.entries(spendByBrand)
-            .sort((a, b) => b[1] - a[1])[0]?.[0];
-          setRightChartBrands(topBrand ? [topBrand] : []);
-        }
-      }
-      if (publishersSelectedBrands.length === 0) {
-        setPublishersSelectedBrands([]); // All brands by default for publishers
-      }
+    if (uniqueBrands.length > 0 && !isLeftChartInitialized) {
+      setLeftChartBrands([]); // All brands by default (empty array means all)
+      setIsLeftChartInitialized(true);
     }
-  }, [uniqueBrandsKey, uniqueBrands, leftChartBrands.length, rightChartBrands.length, publishersSelectedBrands.length, yearFilteredData]);
+  }, [uniqueBrands.length, isLeftChartInitialized]);
+
+  useEffect(() => {
+    if (uniqueBrands.length > 0 && !isRightChartInitialized) {
+      const aventBrands = uniqueBrands.filter(brand =>
+        brand.toLowerCase().includes("avent")
+      );
+      if (aventBrands.length > 0) {
+        setRightChartBrands([aventBrands[0]]);
+      } else {
+        // Find brand with highest total spend
+        const spendByBrand = yearFilteredData.reduce((acc, row) => {
+          const brand = row["brand root"];
+          const spend = Number(row["spend (usd)"]) || 0;
+          acc[brand] = (acc[brand] || 0) + spend;
+          return acc;
+        }, {} as Record<string, number>);
+        const topBrand = Object.entries(spendByBrand)
+          .sort((a, b) => b[1] - a[1])[0]?.[0];
+        setRightChartBrands(topBrand ? [topBrand] : []);
+      }
+      setIsRightChartInitialized(true);
+    }
+  }, [uniqueBrands.length, isRightChartInitialized, yearFilteredData]);
+
+  useEffect(() => {
+    if (uniqueBrands.length > 0 && !isPublishersInitialized) {
+      setPublishersSelectedBrands([]); // All brands by default for publishers
+      setIsPublishersInitialized(true);
+    }
+  }, [uniqueBrands.length, isPublishersInitialized]);
+
+  // Independent callback functions to ensure complete isolation
+  const handleLeftChartBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`⬅️ Left Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setLeftChartBrands([...newBrands]);
+  }, [tabId]);
+
+  const handleRightChartBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`➡️ Right Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setRightChartBrands([...newBrands]);
+  }, [tabId]);
+
+  const handlePublishersSelectedBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`📈 Publishers Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setPublishersSelectedBrands([...newBrands]);
+  }, [tabId]);
 
   const TopPublishersContent = () => {
     // Calculate distribution for publishers (using independent state)
@@ -155,10 +210,10 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
               <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
                 <div className="flex flex-col gap-1 min-w-[200px]">
                   <label className="text-xs font-medium text-foreground">Brand</label>
-                  <MultiSelect
-                    options={uniqueBrands}
+                  <MultiSelectWithTotals
+                    options={publishersBrandsWithSpend}
                     selected={publishersSelectedBrands}
-                    onChange={setPublishersSelectedBrands}
+                    onChange={handlePublishersSelectedBrandsChange}
                     placeholder="All Brands"
                     className="w-full"
                   />
@@ -302,13 +357,15 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
     type,
     selectedBrands,
     onBrandsChange,
-    data 
+    data,
+    brandsWithSpend
   }: { 
     title: string, 
     type: string, 
     selectedBrands: string[], 
     onBrandsChange: (brands: string[]) => void,
-    data: DataRow[]
+    data: DataRow[],
+    brandsWithSpend: { brand: string; totalSpend: number; }[]
   }) => {
     const chartData = useMemo(() => {
       const field = type === "Channel" ? "channel" : "placement";
@@ -344,8 +401,8 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
             <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
               <div className="flex flex-col gap-1 min-w-[200px]">
                 <label className="text-xs font-medium text-foreground">Brand</label>
-                <MultiSelect
-                  options={uniqueBrands}
+                <MultiSelectWithTotals
+                  options={brandsWithSpend}
                   selected={selectedBrands}
                   onChange={onBrandsChange}
                   placeholder="All Brands"
@@ -375,13 +432,15 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
     type,
     selectedBrands,
     onBrandsChange,
-    data 
+    data,
+    brandsWithSpend
   }: { 
     title: string, 
     type: string, 
     selectedBrands: string[], 
     onBrandsChange: (brands: string[]) => void,
-    data: DataRow[]
+    data: DataRow[],
+    brandsWithSpend: { brand: string; totalSpend: number; }[]
   }) => {
     const chartData = useMemo(() => {
       const field = type === "Channel" ? "channel" : "placement";
@@ -417,8 +476,8 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
             <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
               <div className="flex flex-col gap-1 min-w-[200px]">
                 <label className="text-xs font-medium text-foreground">Brand</label>
-                <MultiSelect
-                  options={uniqueBrands}
+                <MultiSelectWithTotals
+                  options={brandsWithSpend}
                   selected={selectedBrands}
                   onChange={onBrandsChange}
                   placeholder="All Brands"
@@ -458,16 +517,18 @@ const ConsolidatedInvestmentDistribution = ({ data }: ConsolidatedInvestmentDist
             title={title}
             type={type}
             selectedBrands={leftChartBrands}
-            onBrandsChange={setLeftChartBrands}
+            onBrandsChange={handleLeftChartBrandsChange}
             data={yearFilteredData}
+            brandsWithSpend={leftBrandsWithSpend}
           />
           
           <RightChart
             title={title}
             type={type}
             selectedBrands={rightChartBrands}
-            onBrandsChange={setRightChartBrands}
+            onBrandsChange={handleRightChartBrandsChange}
             data={yearFilteredData}
+            brandsWithSpend={rightBrandsWithSpend}
           />
         </div>
       </div>

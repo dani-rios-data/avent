@@ -33,29 +33,15 @@ export function MultiSelectWithTotals({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const selectAllId = useId();
 
-  // Auto-close when trigger goes out of view
+  // Only log when open state changes to reduce verbosity
   useEffect(() => {
-    if (!open || !triggerRef.current) return;
+    if (open) {
+      console.log(`🔄 MultiSelect opened with ${selected.length} selected items`);
+    }
+  }, [open, selected.length]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (!entry.isIntersecting) {
-          setOpen(false);
-        }
-      },
-      {
-        threshold: 0.1, // Close when less than 10% visible
-        rootMargin: '-10px' // Add some margin for better UX
-      }
-    );
 
-    observer.observe(triggerRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [open]);
+  // Removed auto-close IntersectionObserver to prevent unwanted closing
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
@@ -65,21 +51,27 @@ export function MultiSelectWithTotals({
   }, [options, searchTerm]);
 
   const handleSelectAll = () => {
+    console.log(`🔄 Select All clicked - selecting ${selected.length === options.length ? 0 : options.length} items`);
     if (selected.length === options.length) {
       onChange([]);
     } else {
       onChange(options.map(opt => opt.brand));
     }
-    setOpen(true);
   };
 
   const handleToggleOption = (brand: string) => {
+    console.log(`🔄 Toggle ${brand} - ${selected.includes(brand) ? 'removing' : 'adding'}`);
+    console.log(`📞 About to call onChange with new selection...`);
     if (selected.includes(brand)) {
       onChange(selected.filter(item => item !== brand));
     } else {
       onChange([...selected, brand]);
     }
-    setOpen(true);
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    console.log(`🔄 handleOpenChange called`, { from: open, to: newOpen });
+    setOpen(newOpen);
   };
 
   const allSelected = selected.length === options.length;
@@ -87,7 +79,7 @@ export function MultiSelectWithTotals({
 
   return (
     <div className={cn("w-full", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             ref={triggerRef}
@@ -108,9 +100,10 @@ export function MultiSelectWithTotals({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-full p-0 bg-white border-border rounded-xl"
+          className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border-border rounded-xl"
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
+          sideOffset={4}
         >
           <div className="flex items-center border-b border-border px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -127,10 +120,7 @@ export function MultiSelectWithTotals({
               <Checkbox
                 id={selectAllId}
                 checked={allSelected}
-                onCheckedChange={() => {
-                  handleSelectAll();
-                  setOpen(true);
-                }}
+                onCheckedChange={handleSelectAll}
                 onClick={(e) => {
                   e.stopPropagation();
                 }}
@@ -141,12 +131,6 @@ export function MultiSelectWithTotals({
               <label
                 htmlFor={selectAllId}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleSelectAll();
-                  setOpen(true);
-                }}
               >
                 {allSelected ? "Deselect All" : "Select All"}
               </label>
@@ -163,14 +147,26 @@ export function MultiSelectWithTotals({
                 <div
                   key={option.brand}
                   className="flex items-center justify-between p-3 hover:bg-muted/50 cursor-pointer"
-                  onClick={() => handleToggleOption(option.brand)}
+                  onClick={(e) => {
+                    console.log(`🖱️ Option div clicked: ${option.brand}`);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggleOption(option.brand);
+                  }}
                 >
                   <div className="flex items-center space-x-2 flex-1">
                     <Checkbox
+                      id={`option-${option.brand}-${selectAllId}`}
                       checked={selected.includes(option.brand)}
-                      onChange={() => {}} // Controlled by parent click
+                      onCheckedChange={() => {
+                        console.log(`☑️ Checkbox onCheckedChange: ${option.brand}`);
+                        handleToggleOption(option.brand);
+                      }}
                     />
-                    <label className="text-sm cursor-pointer flex-1">
+                    <label 
+                      htmlFor={`option-${option.brand}-${selectAllId}`}
+                      className="text-sm cursor-pointer flex-1"
+                    >
                       {option.brand}
                     </label>
                   </div>

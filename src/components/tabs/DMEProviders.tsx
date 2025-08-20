@@ -70,7 +70,7 @@ const DMEProviders = ({ data }: DMEProvidersProps) => {
       />
 
       {/* Investment Distribution Analysis */}
-      <ConsolidatedInvestmentDistribution data={filteredData} />
+      <ConsolidatedInvestmentDistribution key="dme-providers-investment" data={filteredData} tabId="dme-providers" />
     </div>
   );
 };

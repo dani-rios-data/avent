@@ -70,7 +70,7 @@ const BrandManufacturer = ({ data }: BrandManufacturerProps) => {
       />
 
       {/* Investment Distribution Analysis */}
-      <ConsolidatedInvestmentDistribution data={filteredData} />
+      <ConsolidatedInvestmentDistribution key="brand-manufacturer-investment" data={filteredData} tabId="brand-manufacturer" />
     </div>
   );
 };
