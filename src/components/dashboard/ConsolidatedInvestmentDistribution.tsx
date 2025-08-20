@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useCallback, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PieChart, Pie, Cell, Legend, Tooltip, ResponsiveContainer } from "recharts";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { MultiSelectWithTotals } from "@/components/ui/multi-select-with-totals";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber } from "@/lib/utils";
@@ -47,11 +46,15 @@ const CHART_COLORS = [
 
 const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: ConsolidatedInvestmentDistributionProps) => {
   const [activeTab, setActiveTab] = useState("channels");
-  const [leftChartBrands, setLeftChartBrands] = useState<string[]>([]);
-  const [rightChartBrands, setRightChartBrands] = useState<string[]>([]);
+  const [channelLeftChartBrands, setChannelLeftChartBrands] = useState<string[]>([]);
+  const [channelRightChartBrands, setChannelRightChartBrands] = useState<string[]>([]);
+  const [placementLeftChartBrands, setPlacementLeftChartBrands] = useState<string[]>([]);
+  const [placementRightChartBrands, setPlacementRightChartBrands] = useState<string[]>([]);
   const [publishersSelectedBrands, setPublishersSelectedBrands] = useState<string[]>([]);
-  const [isLeftChartInitialized, setIsLeftChartInitialized] = useState(false);
-  const [isRightChartInitialized, setIsRightChartInitialized] = useState(false);
+  const [isChannelLeftChartInitialized, setIsChannelLeftChartInitialized] = useState(false);
+  const [isChannelRightChartInitialized, setIsChannelRightChartInitialized] = useState(false);
+  const [isPlacementLeftChartInitialized, setIsPlacementLeftChartInitialized] = useState(false);
+  const [isPlacementRightChartInitialized, setIsPlacementRightChartInitialized] = useState(false);
   const [isPublishersInitialized, setIsPublishersInitialized] = useState(false);
 
   // Log mount/unmount events only
@@ -87,27 +90,35 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
   }, [yearFilteredData, uniqueBrands]);
 
   // Create independent copies for each selector to prevent cross-interference
-  const leftBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
-  const rightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const channelLeftBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const channelRightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const placementLeftBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const placementRightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
   const publishersBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
 
   // Initialize defaults independently for each selector
   useEffect(() => {
-    if (uniqueBrands.length > 0 && !isLeftChartInitialized) {
-      setLeftChartBrands([]); // All brands by default (empty array means all)
-      setIsLeftChartInitialized(true);
+    if (uniqueBrands.length > 0 && !isChannelLeftChartInitialized) {
+      setChannelLeftChartBrands([]);
+      setIsChannelLeftChartInitialized(true);
     }
-  }, [uniqueBrands.length, isLeftChartInitialized]);
+  }, [uniqueBrands.length, isChannelLeftChartInitialized]);
 
   useEffect(() => {
-    if (uniqueBrands.length > 0 && !isRightChartInitialized) {
+    if (uniqueBrands.length > 0 && !isPlacementLeftChartInitialized) {
+      setPlacementLeftChartBrands([]);
+      setIsPlacementLeftChartInitialized(true);
+    }
+  }, [uniqueBrands.length, isPlacementLeftChartInitialized]);
+
+  useEffect(() => {
+    if (uniqueBrands.length > 0 && !isChannelRightChartInitialized) {
       const aventBrands = uniqueBrands.filter(brand =>
         brand.toLowerCase().includes("avent")
       );
       if (aventBrands.length > 0) {
-        setRightChartBrands([aventBrands[0]]);
+        setChannelRightChartBrands([aventBrands[0]]);
       } else {
-        // Find brand with highest total spend
         const spendByBrand = yearFilteredData.reduce((acc, row) => {
           const brand = row["brand root"];
           const spend = Number(row["spend (usd)"]) || 0;
@@ -116,28 +127,60 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
         }, {} as Record<string, number>);
         const topBrand = Object.entries(spendByBrand)
           .sort((a, b) => b[1] - a[1])[0]?.[0];
-        setRightChartBrands(topBrand ? [topBrand] : []);
+        setChannelRightChartBrands(topBrand ? [topBrand] : []);
       }
-      setIsRightChartInitialized(true);
+      setIsChannelRightChartInitialized(true);
     }
-  }, [uniqueBrands.length, isRightChartInitialized, yearFilteredData]);
+  }, [uniqueBrands.length, isChannelRightChartInitialized, yearFilteredData]);
+
+  useEffect(() => {
+    if (uniqueBrands.length > 0 && !isPlacementRightChartInitialized) {
+      const aventBrands = uniqueBrands.filter(brand =>
+        brand.toLowerCase().includes("avent")
+      );
+      if (aventBrands.length > 0) {
+        setPlacementRightChartBrands([aventBrands[0]]);
+      } else {
+        const spendByBrand = yearFilteredData.reduce((acc, row) => {
+          const brand = row["brand root"];
+          const spend = Number(row["spend (usd)"]) || 0;
+          acc[brand] = (acc[brand] || 0) + spend;
+          return acc;
+        }, {} as Record<string, number>);
+        const topBrand = Object.entries(spendByBrand)
+          .sort((a, b) => b[1] - a[1])[0]?.[0];
+        setPlacementRightChartBrands(topBrand ? [topBrand] : []);
+      }
+      setIsPlacementRightChartInitialized(true);
+    }
+  }, [uniqueBrands.length, isPlacementRightChartInitialized, yearFilteredData]);
 
   useEffect(() => {
     if (uniqueBrands.length > 0 && !isPublishersInitialized) {
-      setPublishersSelectedBrands([]); // All brands by default for publishers
+      setPublishersSelectedBrands([]);
       setIsPublishersInitialized(true);
     }
   }, [uniqueBrands.length, isPublishersInitialized]);
 
   // Independent callback functions to ensure complete isolation
-  const handleLeftChartBrandsChange = useCallback((newBrands: string[]) => {
-    console.log(`⬅️ Left Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
-    setLeftChartBrands([...newBrands]);
+  const handleChannelLeftChartBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`⬅️ Channel Left Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setChannelLeftChartBrands([...newBrands]);
   }, [tabId]);
 
-  const handleRightChartBrandsChange = useCallback((newBrands: string[]) => {
-    console.log(`➡️ Right Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
-    setRightChartBrands([...newBrands]);
+  const handleChannelRightChartBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`➡️ Channel Right Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setChannelRightChartBrands([...newBrands]);
+  }, [tabId]);
+
+  const handlePlacementLeftChartBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`⬅️ Placement Left Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setPlacementLeftChartBrands([...newBrands]);
+  }, [tabId]);
+
+  const handlePlacementRightChartBrandsChange = useCallback((newBrands: string[]) => {
+    console.log(`➡️ Placement Right Chart Brands Change - TabId: ${tabId}`, { to: newBrands });
+    setPlacementRightChartBrands([...newBrands]);
   }, [tabId]);
 
   const handlePublishersSelectedBrandsChange = useCallback((newBrands: string[]) => {
@@ -211,6 +254,7 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
                 <div className="flex flex-col gap-1 min-w-[200px]">
                   <label className="text-xs font-medium text-foreground">Brand</label>
                   <MultiSelectWithTotals
+                    key={`publishers-${tabId}`}
                     options={publishersBrandsWithSpend}
                     selected={publishersSelectedBrands}
                     onChange={handlePublishersSelectedBrandsChange}
@@ -402,6 +446,7 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
               <div className="flex flex-col gap-1 min-w-[200px]">
                 <label className="text-xs font-medium text-foreground">Brand</label>
                 <MultiSelectWithTotals
+                  key={`left-${type.toLowerCase()}-${tabId}`}
                   options={brandsWithSpend}
                   selected={selectedBrands}
                   onChange={onBrandsChange}
@@ -421,7 +466,7 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
           </p>
         </CardHeader>
         <CardContent>
-          <StableDonutChart chartData={chartData} chartId="left-chart" />
+          <StableDonutChart chartData={chartData} chartId={`left-chart-${type.toLowerCase()}`} />
         </CardContent>
       </Card>
     );
@@ -477,6 +522,7 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
               <div className="flex flex-col gap-1 min-w-[200px]">
                 <label className="text-xs font-medium text-foreground">Brand</label>
                 <MultiSelectWithTotals
+                  key={`right-${type.toLowerCase()}-${tabId}`}
                   options={brandsWithSpend}
                   selected={selectedBrands}
                   onChange={onBrandsChange}
@@ -496,13 +542,31 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
           </p>
         </CardHeader>
         <CardContent>
-          <StableDonutChart chartData={chartData} chartId="right-chart" />
+          <StableDonutChart chartData={chartData} chartId={`right-chart-${type.toLowerCase()}`} />
         </CardContent>
       </Card>
     );
   });
 
-  const DonutChartContent = ({ title, type }: { title: string, type: string }) => {
+  const DonutChartContent = ({
+    title,
+    type,
+    leftChartBrands,
+    rightChartBrands,
+    onLeftBrandsChange,
+    onRightBrandsChange,
+    leftBrandsWithSpend,
+    rightBrandsWithSpend
+  }: {
+    title: string;
+    type: string;
+    leftChartBrands: string[];
+    rightChartBrands: string[];
+    onLeftBrandsChange: (brands: string[]) => void;
+    onRightBrandsChange: (brands: string[]) => void;
+    leftBrandsWithSpend: { brand: string; totalSpend: number; }[];
+    rightBrandsWithSpend: { brand: string; totalSpend: number; }[];
+  }) => {
     return (
       <div className="space-y-6">
         <div className="text-center">
@@ -517,16 +581,16 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
             title={title}
             type={type}
             selectedBrands={leftChartBrands}
-            onBrandsChange={handleLeftChartBrandsChange}
+            onBrandsChange={onLeftBrandsChange}
             data={yearFilteredData}
             brandsWithSpend={leftBrandsWithSpend}
           />
-          
+
           <RightChart
             title={title}
             type={type}
             selectedBrands={rightChartBrands}
-            onBrandsChange={handleRightChartBrandsChange}
+            onBrandsChange={onRightBrandsChange}
             data={yearFilteredData}
             brandsWithSpend={rightBrandsWithSpend}
           />
@@ -559,16 +623,28 @@ const ConsolidatedInvestmentDistribution = ({ data, tabId = "default" }: Consoli
         </TabsList>
         
         <TabsContent value="channels" className="mt-6">
-          <DonutChartContent 
-            title="Brand Spend Distribution by Channel" 
+          <DonutChartContent
+            title="Brand Spend Distribution by Channel"
             type="Channel"
+            leftChartBrands={channelLeftChartBrands}
+            rightChartBrands={channelRightChartBrands}
+            onLeftBrandsChange={handleChannelLeftChartBrandsChange}
+            onRightBrandsChange={handleChannelRightChartBrandsChange}
+            leftBrandsWithSpend={channelLeftBrandsWithSpend}
+            rightBrandsWithSpend={channelRightBrandsWithSpend}
           />
         </TabsContent>
-        
+
         <TabsContent value="placements" className="mt-6">
-          <DonutChartContent 
-            title="Brand Spend Distribution by Placement" 
+          <DonutChartContent
+            title="Brand Spend Distribution by Placement"
             type="Placement"
+            leftChartBrands={placementLeftChartBrands}
+            rightChartBrands={placementRightChartBrands}
+            onLeftBrandsChange={handlePlacementLeftChartBrandsChange}
+            onRightBrandsChange={handlePlacementRightChartBrandsChange}
+            leftBrandsWithSpend={placementLeftBrandsWithSpend}
+            rightBrandsWithSpend={placementRightBrandsWithSpend}
           />
         </TabsContent>
         

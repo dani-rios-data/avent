@@ -57,6 +57,8 @@ export function MultiSelectWithTotals({
     } else {
       onChange(options.map(opt => opt.brand));
     }
+    // Keep popover open after selecting all/deselecting
+    setOpen(true);
   };
 
   const handleToggleOption = (brand: string) => {
@@ -67,6 +69,8 @@ export function MultiSelectWithTotals({
     } else {
       onChange([...selected, brand]);
     }
+    // Keep popover open after selecting an option
+    setOpen(true);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
