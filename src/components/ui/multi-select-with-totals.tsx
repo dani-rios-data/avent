@@ -32,6 +32,7 @@ export function MultiSelectWithTotals({
   const [searchTerm, setSearchTerm] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const selectAllId = useId();
+  const preventCloseRef = useRef(false);
 
   // Only log when open state changes to reduce verbosity
   useEffect(() => {
@@ -58,6 +59,7 @@ export function MultiSelectWithTotals({
       onChange(options.map(opt => opt.brand));
     }
     // Keep popover open after selecting all/deselecting
+    preventCloseRef.current = true;
     setOpen(true);
   };
 
@@ -70,11 +72,16 @@ export function MultiSelectWithTotals({
       onChange([...selected, brand]);
     }
     // Keep popover open after selecting an option
+    preventCloseRef.current = true;
     setOpen(true);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
     console.log(`🔄 handleOpenChange called`, { from: open, to: newOpen });
+    if (!newOpen && preventCloseRef.current) {
+      preventCloseRef.current = false;
+      return;
+    }
     setOpen(newOpen);
   };
 
