@@ -92,18 +92,11 @@ export function MultiSelect({
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-full p-0 bg-white border-border rounded-xl z-[9999]" 
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border-border rounded-xl"
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => {
-            preventCloseRef.current = false;
-            setOpen(false);
-          }}
-          onEscapeKeyDown={() => {
-            preventCloseRef.current = false;
-            setOpen(false);
-          }}
+          sideOffset={4}
         >
           <div className="flex items-center border-b border-border px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
