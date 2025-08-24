@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Store, Tag } from "lucide-react";
@@ -198,14 +198,43 @@ const AmazonReviews = () => {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                    <dt className="text-muted-foreground">Avg Price</dt>
-                    <dd className="text-right font-medium">${b.avgPrice.toFixed(2)}</dd>
-                    <dt className="text-muted-foreground">Avg Discount</dt>
-                    <dd className="text-right font-medium">{b.avgDiscount.toFixed(1)}%</dd>
-                    <dt className="text-muted-foreground">Avg Rating</dt>
-                    <dd className="text-right font-medium">{b.avgRating.toFixed(2)}</dd>
-                    <dt className="text-muted-foreground">Ratings</dt>
-                    <dd className="text-right font-medium">{formatNumber(b.totalReviews)}</dd>
+                    {[
+                      {
+                        label: "Avg Price",
+                        value:
+                          Number.isFinite(b.avgPrice) && b.avgPrice > 0
+                            ? `$${b.avgPrice.toFixed(2)}`
+                            : null,
+                      },
+                      {
+                        label: "Avg Discount",
+                        value:
+                          Number.isFinite(b.avgDiscount) && b.avgDiscount > 0
+                            ? `${b.avgDiscount.toFixed(1)}%`
+                            : null,
+                      },
+                      {
+                        label: "Avg Rating",
+                        value:
+                          Number.isFinite(b.avgRating) && b.avgRating > 0
+                            ? b.avgRating.toFixed(2)
+                            : null,
+                      },
+                      {
+                        label: "Ratings",
+                        value:
+                          Number.isFinite(b.totalReviews) && b.totalReviews > 0
+                            ? formatNumber(b.totalReviews)
+                            : null,
+                      },
+                    ].map((stat, idx) =>
+                      stat.value ? (
+                        <Fragment key={idx}>
+                          <dt className="text-muted-foreground">{stat.label}</dt>
+                          <dd className="text-right font-medium">{stat.value}</dd>
+                        </Fragment>
+                      ) : null
+                    )}
                   </dl>
                 </CardContent>
               </Card>
