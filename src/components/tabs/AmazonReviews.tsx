@@ -279,41 +279,11 @@ const AmazonReviews = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Brand Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Brand</TableHead>
-                <TableHead className="text-right">Avg Price</TableHead>
-                <TableHead className="text-right">Avg Discount %</TableHead>
-                <TableHead className="text-right">Avg Rating</TableHead>
-                <TableHead className="text-right">Reviews</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {brandStats.map(b => (
-                <TableRow key={b.brand}>
-                  <TableCell>{b.brand}</TableCell>
-                  <TableCell className="text-right">${b.avgPrice.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{b.avgDiscount.toFixed(1)}%</TableCell>
-                  <TableCell className="text-right">{b.avgRating.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(b.totalReviews)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Price vs. Rating</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Price vs. Rating</CardTitle>
+          </CardHeader>
+          <CardContent>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart>
