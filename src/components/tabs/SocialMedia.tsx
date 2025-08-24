@@ -94,10 +94,7 @@ interface TikTokDataRow {
 
 const SocialMedia = () => {
   const [activeTab, setActiveTab] = useState("instagram");
-  const [instagramMetricsSelectedCompanies, setInstagramMetricsSelectedCompanies] = useState<string[]>([]);
   const [tiktokMetricsSelectedCompanies, setTiktokMetricsSelectedCompanies] = useState<string[]>([]);
-  const [instagramPostTypeSelectedCompanies, setInstagramPostTypeSelectedCompanies] = useState<string[]>([]);
-  const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
   const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
@@ -155,16 +152,6 @@ const SocialMedia = () => {
     });
   }, [instagramData, selectedYears, selectedMonths]);
 
-  const instagramUniqueCompanies = useMemo(() => {
-    const companies = new Set<string>();
-    filteredInstagramData.forEach(row => {
-      if (row.company) {
-        companies.add(row.company);
-      }
-    });
-    return Array.from(companies).sort();
-  }, [filteredInstagramData]);
-
   const filteredTikTokData = useMemo(() => {
     const ttData = (tiktokData as TikTokDataRow[]) || [];
     return ttData.filter(row => {
@@ -214,10 +201,24 @@ const SocialMedia = () => {
 
   const InstagramSection = () => {
     const igData = filteredInstagramData;
+    const [metricsCompanies, setMetricsCompanies] = useState<string[]>([]);
+    const [postTypeCompanies, setPostTypeCompanies] = useState<string[]>([]);
+    const [postsCompanies, setPostsCompanies] = useState<string[]>([]);
+
+    const instagramCompanies = useMemo(() => {
+      const companies = new Set<string>();
+      igData.forEach(row => {
+        if (row.company) {
+          companies.add(row.company);
+        }
+      });
+      return Array.from(companies).sort();
+    }, [igData]);
+
     const igMetricsData =
-      instagramMetricsSelectedCompanies.length === 0
+      metricsCompanies.length === 0
         ? igData
-        : igData.filter(row => instagramMetricsSelectedCompanies.includes(row.company));
+        : igData.filter(row => metricsCompanies.includes(row.company));
 
     // Calculate improved metrics with proper number parsing
     const totalEngagement = igMetricsData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
@@ -238,9 +239,9 @@ const SocialMedia = () => {
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
-                options={instagramUniqueCompanies}
-                selected={instagramMetricsSelectedCompanies}
-                onChange={setInstagramMetricsSelectedCompanies}
+                options={instagramCompanies}
+                selected={metricsCompanies}
+                onChange={setMetricsCompanies}
                 placeholder="All Companies"
                 className="w-full"
               />
@@ -493,9 +494,9 @@ const SocialMedia = () => {
                 <div className="flex flex-col gap-1 min-w-[150px]">
                   <label className="text-xs font-medium text-gray-600 opacity-80">Company</label>
                   <MultiSelect
-                    options={instagramUniqueCompanies}
-                    selected={instagramPostTypeSelectedCompanies}
-                    onChange={setInstagramPostTypeSelectedCompanies}
+                    options={instagramCompanies}
+                    selected={postTypeCompanies}
+                    onChange={setPostTypeCompanies}
                     placeholder="All Companies"
                     className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
                   />
@@ -509,9 +510,9 @@ const SocialMedia = () => {
                     <Pie
                       data={(() => {
                         // Filter data by selected brands
-                        const filteredData = instagramPostTypeSelectedCompanies.length === 0
+                        const filteredData = postTypeCompanies.length === 0
                           ? igData
-                          : igData.filter(row => instagramPostTypeSelectedCompanies.includes(row.company));
+                          : igData.filter(row => postTypeCompanies.includes(row.company));
 
                         const postTypeCount = filteredData.reduce((acc, row) => {
                           const postType = row.post_type || 'Unknown';
@@ -540,9 +541,9 @@ const SocialMedia = () => {
                         const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                         
                         // Filter data by selected brands (same logic as above)
-                        const filteredData = instagramPostTypeSelectedCompanies.length === 0
+                        const filteredData = postTypeCompanies.length === 0
                           ? igData
-                          : igData.filter(row => instagramPostTypeSelectedCompanies.includes(row.company));
+                          : igData.filter(row => postTypeCompanies.includes(row.company));
 
                         const postTypeCount = filteredData.reduce((acc, row) => {
                           const postType = row.post_type || 'Unknown';
@@ -564,9 +565,9 @@ const SocialMedia = () => {
                           const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                           
                           // Filter data to get the same order as the chart
-                          const filteredData = instagramPostTypeSelectedCompanies.length === 0
+                          const filteredData = postTypeCompanies.length === 0
                             ? igData
-                            : igData.filter(row => instagramPostTypeSelectedCompanies.includes(row.company));
+                            : igData.filter(row => postTypeCompanies.includes(row.company));
 
                           const postTypeCount = filteredData.reduce((acc, row) => {
                             const postType = row.post_type || 'Unknown';
@@ -689,9 +690,9 @@ const SocialMedia = () => {
             <div className="mt-4 flex flex-col gap-1 max-w-xs">
               <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
-                options={instagramUniqueCompanies}
-                selected={instagramPostsSelectedCompanies}
-                onChange={setInstagramPostsSelectedCompanies}
+                options={instagramCompanies}
+                selected={postsCompanies}
+                onChange={setPostsCompanies}
                 placeholder="All Companies"
                 className="w-full"
               />
@@ -710,7 +711,7 @@ const SocialMedia = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
               {(igData || [])
-                .filter(row => row && (instagramPostsSelectedCompanies.length === 0 || instagramPostsSelectedCompanies.includes(row.company)))
+                .filter(row => row && (postsCompanies.length === 0 || postsCompanies.includes(row.company)))
                 .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
                 .slice(0, 9)
                 .map((post, index) => (
