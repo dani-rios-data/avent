@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Store, Tag } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
 import {
   BarChart,
@@ -176,7 +176,10 @@ const AmazonReviews = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Brand Overview</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Store className="h-5 w-5 text-primary" />
+            Brand Overview
+          </CardTitle>
           <CardDescription>General brand information</CardDescription>
         </CardHeader>
         <CardContent>
@@ -184,10 +187,13 @@ const AmazonReviews = () => {
             {brandStats.map(b => (
               <Card
                 key={b.brand}
-                className="border border-border shadow-gentle rounded-xl hover:shadow-md transition-shadow"
+                className="border border-border shadow-gentle rounded-xl bg-gradient-to-br from-background to-muted/30 hover:shadow-lg hover:-translate-y-0.5 transition-all"
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{b.brand}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-lg">{b.brand}</CardTitle>
+                  </div>
                   <CardDescription>{b.productCount} products</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
