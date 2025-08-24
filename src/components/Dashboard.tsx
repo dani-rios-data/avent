@@ -6,6 +6,7 @@ import ExecutiveSummary from "./tabs/ExecutiveSummary";
 import BrandManufacturer from "./tabs/BrandManufacturer";
 import DMEProviders from "./tabs/DMEProviders";
 import SocialMedia from "./tabs/SocialMedia";
+import AmazonReviews from "./tabs/AmazonReviews";
 import { useCSVData } from "@/hooks/useCSVData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -59,7 +60,7 @@ const Dashboard = () => {
         <div className="bg-[#EA899A] border-t border-b border-[#EA899A] flex items-center">
           <div className="container mx-auto max-w-7xl">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="px-6 py-1">
-              <TabsList className="grid w-full grid-cols-4 bg-transparent rounded-none border-none p-0 shadow-none">
+              <TabsList className="grid w-full grid-cols-5 bg-transparent rounded-none border-none p-0 shadow-none">
                 <TabsTrigger 
                   value="executive-summary" 
                   className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-soft font-bold text-black transition-all text-sm"
@@ -78,11 +79,17 @@ const Dashboard = () => {
                 >
                   DME Providers
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="social-media" 
+                <TabsTrigger
+                  value="social-media"
                   className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-soft font-bold text-black transition-all text-sm"
                 >
                   Social Media
+                </TabsTrigger>
+                <TabsTrigger
+                  value="amazon-reviews"
+                  className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-soft font-bold text-black transition-all text-sm"
+                >
+                  Amazon Reviews
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -108,6 +115,10 @@ const Dashboard = () => {
             
             <TabsContent value="social-media" className="mt-0">
               <SocialMedia />
+            </TabsContent>
+
+            <TabsContent value="amazon-reviews" className="mt-0">
+              <AmazonReviews />
             </TabsContent>
           </div>
         </Tabs>
