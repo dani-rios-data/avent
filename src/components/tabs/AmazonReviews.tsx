@@ -11,9 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
   ScatterChart,
   Scatter,
 } from "recharts";
@@ -67,8 +64,6 @@ interface BrandStats {
   avgDiscount: number;
   avgRating: number;
 }
-
-const COLORS = ["#EA899A", "#3B82F6", "#10B981", "#F59E0B", "#8B5CF6", "#F43F5E", "#6366F1", "#14B8A6"]; 
 
 const AmazonReviews = () => {
   const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/consolidated_products.csv");
@@ -124,11 +119,11 @@ const AmazonReviews = () => {
         totalRating: 0,
       };
       stats.productCount += 1;
-      stats.totalReviews += p.reviewCount;
+      stats.totalReviews += p.numberOfRatings;
       stats.totalPrice += p.price;
       const discount = p.originalPrice ? ((p.originalPrice - p.price) / p.originalPrice) * 100 : 0;
       stats.totalDiscount += discount;
-      stats.totalRating += p.avgReviewRating ?? p.starRating;
+      stats.totalRating += p.starRating;
       brandMap.set(p.brand, stats);
     });
 
@@ -182,33 +177,33 @@ const AmazonReviews = () => {
       <Card>
         <CardHeader>
           <CardTitle>Brand Overview</CardTitle>
-          <CardDescription>Product and review share by brand</CardDescription>
+          <CardDescription>General brand information</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={brandStats}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="brand" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="productCount" fill="#EA899A" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={brandStats} dataKey="totalReviews" nameKey="brand" label>
-                    {brandStats.map((entry, index) => (
-                      <Cell key={entry.brand} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {brandStats.map(b => (
+              <Card
+                key={b.brand}
+                className="border border-border shadow-gentle rounded-xl hover:shadow-md transition-shadow"
+              >
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{b.brand}</CardTitle>
+                  <CardDescription>{b.productCount} products</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <dt className="text-muted-foreground">Avg Price</dt>
+                    <dd className="text-right font-medium">${b.avgPrice.toFixed(2)}</dd>
+                    <dt className="text-muted-foreground">Avg Discount</dt>
+                    <dd className="text-right font-medium">{b.avgDiscount.toFixed(1)}%</dd>
+                    <dt className="text-muted-foreground">Avg Rating</dt>
+                    <dd className="text-right font-medium">{b.avgRating.toFixed(2)}</dd>
+                    <dt className="text-muted-foreground">Ratings</dt>
+                    <dd className="text-right font-medium">{formatNumber(b.totalReviews)}</dd>
+                  </dl>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </CardContent>
       </Card>
