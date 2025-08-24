@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useId } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ export function MultiSelect({
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const preventCloseRef = useRef(false);
+  const selectAllId = useId();
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
@@ -113,7 +114,7 @@ export function MultiSelect({
               className="flex items-center space-x-2 p-3 hover:bg-muted/30 cursor-pointer"
             >
               <Checkbox
-                id="select-all"
+                id={selectAllId}
                 checked={allSelected}
                 onCheckedChange={handleSelectAll}
                 className={cn(
@@ -121,7 +122,7 @@ export function MultiSelect({
                 )}
               />
               <label
-                htmlFor="select-all"
+                htmlFor={selectAllId}
                 className="text-sm font-medium leading-none cursor-pointer flex-1"
               >
                 {allSelected ? "Deselect All" : "Select All"}
