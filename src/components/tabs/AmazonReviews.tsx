@@ -78,12 +78,13 @@ const AmazonReviews = () => {
     const prodRows = (productRaw as ProductRow[]).map(p => {
       const price = typeof p.Price === "number" ? p.Price : parseFloat(String(p.Price).replace(/[$,]/g, ""));
       const originalPrice = p["Original Price"] ? parseFloat(String(p["Original Price"]).replace(/[$,]/g, "")) : null;
+      const brand = p.Brand.replace(/^Visit the\s+(.*?)\s+Store$/i, "$1").trim();
       return {
         asin: p.ASIN,
         title: p["Product Title"],
         price,
         originalPrice,
-        brand: p.Brand,
+        brand,
         starRating: Number(p["Star Rating"]),
         numberOfRatings: Number(p["Number of Ratings"]),
         url: p["Product URL"],
