@@ -129,13 +129,16 @@ const SocialMedia = () => {
 
     const monthsSet = new Set<string>();
     dataForMonths.forEach(row => {
-      const [month] = row.published_date.split("/");
-      if (month) monthsSet.add(month);
+      const [month, , year] = row.published_date.split("/");
+      if (month && year) {
+        const monthYear = `${MONTH_NAMES[Number(month) - 1]} ${year}`;
+        monthsSet.add(monthYear);
+      }
     });
 
     return {
-      years: Array.from(yearsSet).sort(),
-      months: Array.from(monthsSet).sort((a, b) => Number(a) - Number(b))
+      years: Array.from(yearsSet).sort().reverse(),
+      months: Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
     };
   }, [instagramData, tiktokData, selectedYears]);
 
@@ -143,9 +146,10 @@ const SocialMedia = () => {
     const igData = (instagramData as InstagramDataRow[]) || [];
     return igData.filter(row => {
       const [month, , year] = row.published_date.split("/");
+      const monthYear = `${MONTH_NAMES[Number(month) - 1]} ${year}`;
       return (
         (selectedYears.length === 0 || selectedYears.includes(year)) &&
-        (selectedMonths.length === 0 || selectedMonths.includes(month))
+        (selectedMonths.length === 0 || selectedMonths.includes(monthYear))
       );
     });
   }, [instagramData, selectedYears, selectedMonths]);
@@ -154,9 +158,10 @@ const SocialMedia = () => {
     const ttData = (tiktokData as TikTokDataRow[]) || [];
     return ttData.filter(row => {
       const [month, , year] = row.published_date.split("/");
+      const monthYear = `${MONTH_NAMES[Number(month) - 1]} ${year}`;
       return (
         (selectedYears.length === 0 || selectedYears.includes(year)) &&
-        (selectedMonths.length === 0 || selectedMonths.includes(month))
+        (selectedMonths.length === 0 || selectedMonths.includes(monthYear))
       );
     });
   }, [tiktokData, selectedYears, selectedMonths]);
@@ -1477,14 +1482,9 @@ const SocialMedia = () => {
           <div className="flex flex-col gap-1 min-w-[200px]">
             <label className="text-xs font-medium text-foreground">Month</label>
             <MultiSelect
-              options={months.map(month => MONTH_NAMES[Number(month) - 1])}
-              selected={selectedMonths.map(month => MONTH_NAMES[Number(month) - 1])}
-              onChange={(selectedMonthNames) => {
-                const selectedMonthNumbers = selectedMonthNames.map(name =>
-                  String(MONTH_NAMES.indexOf(name) + 1)
-                );
-                setSelectedMonths(selectedMonthNumbers);
-              }}
+              options={months}
+              selected={selectedMonths}
+              onChange={setSelectedMonths}
               placeholder="All Months"
               className="w-full"
             />
