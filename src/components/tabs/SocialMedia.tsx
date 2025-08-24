@@ -94,8 +94,6 @@ interface TikTokDataRow {
 
 const SocialMedia = () => {
   const [activeTab, setActiveTab] = useState("instagram");
-  const [tiktokMetricsSelectedCompanies, setTiktokMetricsSelectedCompanies] = useState<string[]>([]);
-  const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   
@@ -163,15 +161,6 @@ const SocialMedia = () => {
     });
   }, [tiktokData, selectedYears, selectedMonths]);
 
-  const tiktokUniqueCompanies = useMemo(() => {
-    const companies = new Set<string>();
-    filteredTikTokData.forEach(row => {
-      if (row.company) {
-        companies.add(row.company);
-      }
-    });
-    return Array.from(companies).sort();
-  }, [filteredTikTokData]);
 
   if (instagramLoading || tiktokLoading) {
     return (
@@ -825,6 +814,19 @@ const SocialMedia = () => {
 
   const TikTokSection = () => {
     const ttData = filteredTikTokData;
+    const [tiktokMetricsSelectedCompanies, setTiktokMetricsSelectedCompanies] = useState<string[]>([]);
+    const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
+
+    const tiktokUniqueCompanies = useMemo(() => {
+      const companies = new Set<string>();
+      ttData.forEach(row => {
+        if (row.company) {
+          companies.add(row.company);
+        }
+      });
+      return Array.from(companies).sort();
+    }, [ttData]);
+
     const ttMetricsData =
       tiktokMetricsSelectedCompanies.length === 0
         ? ttData
