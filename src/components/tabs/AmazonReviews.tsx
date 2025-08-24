@@ -1,8 +1,16 @@
-import { useMemo, Fragment } from "react";
+import { useMemo, Fragment, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Store, Tag } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectSeparator,
+} from "@/components/ui/select";
 import {
   BarChart,
   Bar,
@@ -146,6 +154,17 @@ const AmazonReviews = () => {
     return { products, brandStats, ratingDistribution: ratingCounts, topProducts };
   }, [productRaw, reviewRaw]);
 
+  const sortedBrandStats = useMemo(
+    () => [...brandStats].sort((a, b) => b.totalReviews - a.totalReviews),
+    [brandStats]
+  );
+  const [selectedBrand, setSelectedBrand] = useState<string>("top");
+  const displayedBrands = useMemo(() => {
+    if (selectedBrand === "top") return sortedBrandStats.slice(0, 8);
+    if (selectedBrand === "all") return sortedBrandStats;
+    return sortedBrandStats.filter(b => b.brand === selectedBrand);
+  }, [selectedBrand, sortedBrandStats]);
+
   if (productsLoading || reviewsLoading) {
     return (
       <div className="min-h-64 flex items-center justify-center">
@@ -181,10 +200,27 @@ const AmazonReviews = () => {
             Brand Overview
           </CardTitle>
           <CardDescription>General brand information</CardDescription>
+          <div className="w-48 mt-4">
+            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="top">Top 8 Brands</SelectItem>
+                <SelectItem value="all">All Brands</SelectItem>
+                <SelectSeparator />
+                {sortedBrandStats.map(b => (
+                  <SelectItem key={b.brand} value={b.brand}>
+                    {b.brand}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {brandStats.map(b => (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {displayedBrands.map(b => (
               <Card
                 key={b.brand}
                 className="border border-border shadow-gentle rounded-xl bg-gradient-to-br from-background to-muted/30 hover:shadow-lg hover:-translate-y-0.5 transition-all"
