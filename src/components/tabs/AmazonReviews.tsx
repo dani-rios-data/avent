@@ -1,16 +1,9 @@
-import { useMemo, Fragment, useState } from "react";
+import { useMemo, Fragment, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Store, Tag } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  SelectSeparator,
-} from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   BarChart,
   Bar,
@@ -158,12 +151,15 @@ const AmazonReviews = () => {
     () => [...brandStats].sort((a, b) => b.totalReviews - a.totalReviews),
     [brandStats]
   );
-  const [selectedBrand, setSelectedBrand] = useState<string>("top");
-  const displayedBrands = useMemo(() => {
-    if (selectedBrand === "top") return sortedBrandStats.slice(0, 8);
-    if (selectedBrand === "all") return sortedBrandStats;
-    return sortedBrandStats.filter(b => b.brand === selectedBrand);
-  }, [selectedBrand, sortedBrandStats]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  useEffect(() => {
+    setSelectedBrands(sortedBrandStats.slice(0, 8).map(b => b.brand));
+  }, [sortedBrandStats]);
+  const displayedBrands = useMemo(
+    () =>
+      sortedBrandStats.filter(b => selectedBrands.includes(b.brand)),
+    [selectedBrands, sortedBrandStats]
+  );
 
   if (productsLoading || reviewsLoading) {
     return (
@@ -200,22 +196,13 @@ const AmazonReviews = () => {
             Brand Overview
           </CardTitle>
           <CardDescription>General brand information</CardDescription>
-          <div className="w-48 mt-4">
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select brand" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="top">Top 8 Brands</SelectItem>
-                <SelectItem value="all">All Brands</SelectItem>
-                <SelectSeparator />
-                {sortedBrandStats.map(b => (
-                  <SelectItem key={b.brand} value={b.brand}>
-                    {b.brand}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="w-72 mt-4">
+            <MultiSelect
+              options={sortedBrandStats.map(b => b.brand)}
+              selected={selectedBrands}
+              onChange={setSelectedBrands}
+              placeholder="Select brands"
+            />
           </div>
         </CardHeader>
         <CardContent>
@@ -223,12 +210,14 @@ const AmazonReviews = () => {
             {displayedBrands.map(b => (
               <Card
                 key={b.brand}
-                className="border border-border shadow-gentle rounded-xl bg-gradient-to-br from-background to-muted/30 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                className="border border-border/40 shadow-sm rounded-2xl bg-white/80 backdrop-blur-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-lg">{b.brand}</CardTitle>
+                    <Tag className="h-4 w-4 text-primary/80" />
+                    <CardTitle className="text-lg font-semibold text-foreground">
+                      {b.brand}
+                    </CardTitle>
                   </div>
                   <CardDescription>{b.productCount} products</CardDescription>
                 </CardHeader>
