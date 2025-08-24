@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useId } from "react";
+import { useState, useMemo, useRef, useId, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,10 +30,23 @@ export function MultiSelect({
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
-    return options.filter(option => 
+    return options.filter(option =>
       option.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [options, searchTerm]);
+
+  // Close the popover when the user scrolls the page
+  useEffect(() => {
+    if (!open) return;
+
+    const handleScroll = () => {
+      preventCloseRef.current = false;
+      setOpen(false);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [open]);
 
   const handleSelectAll = () => {
     if (selected.length === options.length) {
