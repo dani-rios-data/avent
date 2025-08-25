@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
   ScatterChart,
   Scatter,
+  Legend,
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -232,7 +233,7 @@ const AmazonReviews = () => {
   const brandColorMap = useMemo(() => {
     const brands = Array.from(new Set(products.map(p => p.brand)));
     return brands.reduce<Record<string, string>>((acc, brand, index) => {
-      acc[brand] = `hsl(${(index * 360) / brands.length}, 65%, 50%)`;
+      acc[brand] = `hsl(${(index * 360) / brands.length}, 70%, 80%)`;
       return acc;
     }, {});
   }, [products]);
@@ -359,12 +360,24 @@ const AmazonReviews = () => {
           <CardContent>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart>
+              <ScatterChart margin={{ top: 10, right: 10, bottom: 40, left: 10 }}>
                 <XAxis type="number" dataKey="price" name="Price" unit="$" />
                 <YAxis type="number" dataKey="starRating" name="Rating" domain={[0, 5]} />
                 <Tooltip content={<PriceRatingTooltip />} cursor={{ strokeDasharray: "3 3" }} />
+                <Legend
+                  verticalAlign="bottom"
+                  align="center"
+                  iconType="circle"
+                  height={36}
+                />
                 {productsByBrand.map(({ brand, items }) => (
-                  <Scatter key={brand} data={items} name={brand} fill={brandColorMap[brand]} />
+                  <Scatter
+                    key={brand}
+                    data={items}
+                    name={brand}
+                    fill={brandColorMap[brand]}
+                    legendType="circle"
+                  />
                 ))}
               </ScatterChart>
             </ResponsiveContainer>
