@@ -15,6 +15,7 @@ import {
   ScatterChart,
   Scatter,
 } from "recharts";
+import type { TooltipProps } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,30 @@ interface BrandStats {
   avgDiscount: number;
   avgRating: number;
 }
+
+const PriceRatingTooltip = ({
+  active,
+  payload,
+}: TooltipProps<number, string>) => {
+  if (active && payload?.length) {
+    const product = payload[0].payload as Product;
+    return (
+      <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-md">
+        <div className="font-medium">{product.brand}</div>
+        <div className="text-muted-foreground">{product.title}</div>
+        <a
+          href={product.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
+          View product
+        </a>
+      </div>
+    );
+  }
+  return null;
+};
 
 const AmazonReviews = () => {
   const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/consolidated_products.csv");
@@ -160,6 +185,22 @@ const AmazonReviews = () => {
       sortedBrandStats.filter(b => selectedBrands.includes(b.brand)),
     [selectedBrands, sortedBrandStats]
   );
+
+  const brandColorMap = useMemo(() => {
+    const brands = Array.from(new Set(products.map(p => p.brand)));
+    return brands.reduce<Record<string, string>>((acc, brand, index) => {
+      acc[brand] = `hsl(${(index * 360) / brands.length}, 65%, 50%)`;
+      return acc;
+    }, {});
+  }, [products]);
+
+  const productsByBrand = useMemo(() => {
+    const map: Record<string, Product[]> = {};
+    products.forEach(p => {
+      (map[p.brand] = map[p.brand] || []).push(p);
+    });
+    return Object.entries(map).map(([brand, items]) => ({ brand, items }));
+  }, [products]);
 
   if (productsLoading || reviewsLoading) {
     return (
@@ -276,11 +317,12 @@ const AmazonReviews = () => {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis type="number" dataKey="price" name="Price" unit="$" />
                 <YAxis type="number" dataKey="starRating" name="Rating" domain={[0, 5]} />
-                <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-                <Scatter data={products} fill="#EA899A" />
+                <Tooltip content={<PriceRatingTooltip />} cursor={{ strokeDasharray: "3 3" }} />
+                {productsByBrand.map(({ brand, items }) => (
+                  <Scatter key={brand} data={items} name={brand} fill={brandColorMap[brand]} />
+                ))}
               </ScatterChart>
             </ResponsiveContainer>
           </div>
