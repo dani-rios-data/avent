@@ -281,7 +281,8 @@ const AmazonReviews = () => {
             Brand Overview
           </CardTitle>
           <CardDescription>General brand information</CardDescription>
-          <div className="w-72 mt-4">
+          <div className="w-72 mt-4 flex flex-col gap-1">
+            <label className="text-xs font-medium text-foreground">Brand</label>
             <MultiSelect
               options={sortedBrandStats.map(b => b.brand)}
               selected={selectedBrands}
