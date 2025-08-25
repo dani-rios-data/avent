@@ -269,6 +269,19 @@ const AmazonReviews = () => {
     return Object.entries(map).map(([brand, items]) => ({ brand, items }));
   }, [products]);
 
+  const [selectedPriceBrands, setSelectedPriceBrands] = useState<string[]>([]);
+  useEffect(() => {
+    setSelectedPriceBrands(sortedBrandStats.slice(0, 8).map(b => b.brand));
+  }, [sortedBrandStats]);
+
+  const filteredProductsByBrand = useMemo(
+    () =>
+      productsByBrand.filter(({ brand }) =>
+        selectedPriceBrands.includes(brand)
+      ),
+    [productsByBrand, selectedPriceBrands]
+  );
+
   if (productsLoading || reviewsLoading) {
     return (
       <div className="min-h-64 flex items-center justify-center">
@@ -380,6 +393,15 @@ const AmazonReviews = () => {
         <Card>
           <CardHeader>
             <CardTitle>Price vs. Rating</CardTitle>
+            <div className="w-72 mt-4 flex flex-col gap-1">
+              <label className="text-xs font-medium text-foreground">Brand</label>
+              <MultiSelect
+                options={sortedBrandStats.map(b => b.brand)}
+                selected={selectedPriceBrands}
+                onChange={setSelectedPriceBrands}
+                placeholder="Select brands"
+              />
+            </div>
           </CardHeader>
           <CardContent>
           <div className="h-72">
@@ -413,7 +435,7 @@ const AmazonReviews = () => {
                   iconSize={8}
                   wrapperStyle={{ fontSize: "0.75rem", paddingTop: 8 }}
                 />
-                {productsByBrand.map(({ brand, items }) => (
+                {filteredProductsByBrand.map(({ brand, items }) => (
                   <Scatter
                     key={brand}
                     data={items}
