@@ -87,18 +87,17 @@ const PriceRatingTooltip = ({
 }: TooltipProps<number, string>) => {
   if (active && payload?.length) {
     const product = payload[0].payload as Product;
+    const price = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(product.price);
+
     return (
-      <div className="rounded-lg border bg-background px-3 py-2 text-xs shadow-md">
-        <div className="font-medium">{product.brand}</div>
-        <div className="text-muted-foreground">{product.title}</div>
-        <a
-          href={product.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary underline"
-        >
-          View product
-        </a>
+      <div className="rounded-lg border bg-background/80 backdrop-blur px-3 py-2 text-xs shadow-lg">
+        <div className="font-medium text-foreground">{product.brand}</div>
+        <div className="mb-1 text-muted-foreground">{product.title}</div>
+        <div className="font-semibold text-primary">{price}</div>
       </div>
     );
   }
@@ -115,6 +114,8 @@ const AmazonReviews = () => {
     ratingDistributionAll,
     ratingDistributionAvent,
     topProducts,
+    priceDomain,
+    priceTicks,
   } = useMemo(() => {
     const prodRows = (productRaw as ProductRow[]).map(p => {
       const price = typeof p.Price === "number" ? p.Price : parseFloat(String(p.Price).replace(/[$,]/g, ""));
@@ -207,12 +208,25 @@ const AmazonReviews = () => {
       .sort((a, b) => (b.avgReviewRating! - a.avgReviewRating!))
       .slice(0, 5);
 
+    const priceValues = products.map(p => p.price);
+    const minPrice = Math.min(...priceValues);
+    const maxPrice = Math.max(...priceValues);
+    const niceMin = Math.floor(minPrice / 10) * 10;
+    const niceMax = Math.ceil(maxPrice / 10) * 10;
+    const step = Math.ceil((niceMax - niceMin) / 5 / 10) * 10;
+    const ticks = Array.from(
+      { length: Math.floor((niceMax - niceMin) / step) + 1 },
+      (_, i) => niceMin + i * step,
+    );
+
     return {
       products,
       brandStats,
       ratingDistributionAll: ratingCountsAll,
       ratingDistributionAvent: ratingCountsAvent,
       topProducts,
+      priceDomain: [niceMin, niceMax] as [number, number],
+      priceTicks: ticks,
     };
   }, [productRaw, reviewRaw]);
 
@@ -362,14 +376,33 @@ const AmazonReviews = () => {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <ScatterChart margin={{ top: 10, right: 10, bottom: 40, left: 10 }}>
-                <XAxis type="number" dataKey="price" name="Price" unit="$" />
-                <YAxis type="number" dataKey="starRating" name="Rating" domain={[0, 5]} />
-                <Tooltip content={<PriceRatingTooltip />} cursor={{ strokeDasharray: "3 3" }} />
+                <XAxis
+                  type="number"
+                  dataKey="price"
+                  name="Price"
+                  domain={priceDomain}
+                  ticks={priceTicks}
+                  tickFormatter={v => `$${v}`}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="starRating"
+                  name="Rating"
+                  domain={[0, 5]}
+                  ticks={[0, 1, 2, 3, 4, 5]}
+                  tick={{ fontSize: 12 }}
+                />
+                <Tooltip
+                  content={<PriceRatingTooltip />}
+                  cursor={{ strokeDasharray: "3 3" }}
+                />
                 <Legend
                   verticalAlign="bottom"
                   align="center"
                   iconType="circle"
-                  height={36}
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: "0.75rem", paddingTop: 8 }}
                 />
                 {productsByBrand.map(({ brand, items }) => (
                   <Scatter
