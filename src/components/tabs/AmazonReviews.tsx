@@ -510,7 +510,6 @@ const AmazonReviews = () => {
                     ⭐ {(p.avgReviewRating ?? p.starRating).toFixed(2)} ({formatNumber(p.reviewCount || p.numberOfRatings)})
                   </div>
                   <dl className="text-xs space-y-1">
-                    <div className="flex justify-between"><dt>ASIN</dt><dd>{p.asin}</dd></div>
                     <div className="flex justify-between"><dt>Currency</dt><dd>{p.currency}</dd></div>
                     <div className="flex justify-between"><dt>Country</dt><dd>{p.country}</dd></div>
                     {p.availability && (
