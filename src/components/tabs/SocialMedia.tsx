@@ -94,15 +94,8 @@ interface TikTokDataRow {
 
 const SocialMedia = () => {
   const [activeTab, setActiveTab] = useState("instagram");
-  const [instagramMetricsSelectedCompanies, setInstagramMetricsSelectedCompanies] = useState<string[]>([]);
-  const [tiktokMetricsSelectedCompanies, setTiktokMetricsSelectedCompanies] = useState<string[]>([]);
-  const [instagramPostTypeSelectedCompanies, setInstagramPostTypeSelectedCompanies] = useState<string[]>([]);
-  const [instagramPostsSelectedCompanies, setInstagramPostsSelectedCompanies] = useState<string[]>([]);
-  const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
-  const [instagramYear, setInstagramYear] = useState<string[]>([]);
-  const [instagramMonth, setInstagramMonth] = useState<string[]>([]);
-  const [tiktokYear, setTiktokYear] = useState<string[]>([]);
-  const [tiktokMonth, setTiktokMonth] = useState<string[]>([]);
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   
   const { 
     data: instagramData, 
@@ -116,105 +109,63 @@ const SocialMedia = () => {
     error: tiktokError 
   } = useCSVData("/SM_TikTok_Breast_Pump_Brands.csv");
 
-  // Extract unique values and filter Instagram dataset by year and month
-  const {
-    instagramUniqueCompanies,
-    instagramYears,
-    instagramMonths,
-    filteredInstagramData
-  } = useMemo(() => {
-    const igData = instagramData as unknown as InstagramDataRow[];
+  const { years, months } = useMemo(() => {
+    const igData = (instagramData as InstagramDataRow[]) || [];
+    const ttData = (tiktokData as TikTokDataRow[]) || [];
+    const combined = [...igData, ...ttData];
 
-    if (!igData) {
-      return {
-        instagramUniqueCompanies: [],
-        instagramYears: [],
-        instagramMonths: [],
-        filteredInstagramData: []
-      };
-    }
-
-    const years = new Set<string>();
-    const months = new Set<string>();
-
-    igData.forEach(row => {
-      const [month, , year] = row.published_date.split("/");
-      if (year) years.add(year);
-      if (month) months.add(month);
+    const yearsSet = new Set<string>();
+    combined.forEach(row => {
+      const [, , year] = row.published_date.split("/");
+      if (year) yearsSet.add(year);
     });
 
-    const filteredData = igData.filter(row => {
-      const [month, , year] = row.published_date.split("/");
-      return (
-        (instagramYear.length === 0 || instagramYear.includes(year)) &&
-        (instagramMonth.length === 0 || instagramMonth.includes(month))
-      );
-    });
+    const dataForMonths = selectedYears.length > 0
+      ? combined.filter(row => {
+          const [, , year] = row.published_date.split("/");
+          return selectedYears.includes(year);
+        })
+      : combined;
 
-    const companies = new Set<string>();
-    filteredData.forEach(row => {
-      if (row.company) {
-        companies.add(row.company);
+    const monthsSet = new Set<string>();
+    dataForMonths.forEach(row => {
+      const [month, , year] = row.published_date.split("/");
+      if (month && year) {
+        const monthYear = `${MONTH_NAMES[Number(month) - 1]} ${year}`;
+        monthsSet.add(monthYear);
       }
     });
 
     return {
-      instagramUniqueCompanies: Array.from(companies).sort(),
-      instagramYears: Array.from(years).sort(),
-      instagramMonths: Array.from(months).sort((a, b) => Number(a) - Number(b)),
-      filteredInstagramData: filteredData
+      years: Array.from(yearsSet).sort().reverse(),
+      months: Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
     };
-  }, [instagramData, instagramYear, instagramMonth]);
+  }, [instagramData, tiktokData, selectedYears]);
 
-  // Extract unique values and filter TikTok dataset by year and month
-  const {
-    tiktokUniqueCompanies,
-    tiktokYears,
-    tiktokMonths,
-    filteredTikTokData
-  } = useMemo(() => {
-    const ttData = tiktokData as unknown as TikTokDataRow[];
-
-    if (!ttData) {
-      return {
-        tiktokUniqueCompanies: [],
-        tiktokYears: [],
-        tiktokMonths: [],
-        filteredTikTokData: []
-      };
-    }
-
-    const years = new Set<string>();
-    const months = new Set<string>();
-
-    ttData.forEach(row => {
+  const filteredInstagramData = useMemo(() => {
+    const igData = (instagramData as InstagramDataRow[]) || [];
+    return igData.filter(row => {
       const [month, , year] = row.published_date.split("/");
-      if (year) years.add(year);
-      if (month) months.add(month);
-    });
-
-    const filteredData = ttData.filter(row => {
-      const [month, , year] = row.published_date.split("/");
+      const monthYear = `${MONTH_NAMES[Number(month) - 1]} ${year}`;
       return (
-        (tiktokYear.length === 0 || tiktokYear.includes(year)) &&
-        (tiktokMonth.length === 0 || tiktokMonth.includes(month))
+        (selectedYears.length === 0 || selectedYears.includes(year)) &&
+        (selectedMonths.length === 0 || selectedMonths.includes(monthYear))
       );
     });
+  }, [instagramData, selectedYears, selectedMonths]);
 
-    const companies = new Set<string>();
-    filteredData.forEach(row => {
-      if (row.company) {
-        companies.add(row.company);
-      }
+  const filteredTikTokData = useMemo(() => {
+    const ttData = (tiktokData as TikTokDataRow[]) || [];
+    return ttData.filter(row => {
+      const [month, , year] = row.published_date.split("/");
+      const monthYear = `${MONTH_NAMES[Number(month) - 1]} ${year}`;
+      return (
+        (selectedYears.length === 0 || selectedYears.includes(year)) &&
+        (selectedMonths.length === 0 || selectedMonths.includes(monthYear))
+      );
     });
+  }, [tiktokData, selectedYears, selectedMonths]);
 
-    return {
-      tiktokUniqueCompanies: Array.from(companies).sort(),
-      tiktokYears: Array.from(years).sort(),
-      tiktokMonths: Array.from(months).sort((a, b) => Number(a) - Number(b)),
-      filteredTikTokData: filteredData
-    };
-  }, [tiktokData, tiktokYear, tiktokMonth]);
 
   if (instagramLoading || tiktokLoading) {
     return (
@@ -244,10 +195,24 @@ const SocialMedia = () => {
 
   const InstagramSection = () => {
     const igData = filteredInstagramData;
+    const [metricsCompanies, setMetricsCompanies] = useState<string[]>([]);
+    const [postTypeCompanies, setPostTypeCompanies] = useState<string[]>([]);
+    const [postsCompanies, setPostsCompanies] = useState<string[]>([]);
+
+    const instagramCompanies = useMemo(() => {
+      const companies = new Set<string>();
+      igData.forEach(row => {
+        if (row.company) {
+          companies.add(row.company);
+        }
+      });
+      return Array.from(companies).sort();
+    }, [igData]);
+
     const igMetricsData =
-      instagramMetricsSelectedCompanies.length === 0
+      metricsCompanies.length === 0
         ? igData
-        : igData.filter(row => instagramMetricsSelectedCompanies.includes(row.company));
+        : igData.filter(row => metricsCompanies.includes(row.company));
 
     // Calculate improved metrics with proper number parsing
     const totalEngagement = igMetricsData.reduce((sum, row) => sum + (Number(row.engagement_total) || 0), 0);
@@ -261,37 +226,6 @@ const SocialMedia = () => {
 
     return (
       <div className="space-y-6">
-        {/* Instagram Filters */}
-        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
-          <div className="flex flex-wrap gap-4 items-start">
-            <div className="flex flex-col gap-1 min-w-[200px]">
-              <label className="text-xs font-medium text-foreground">Year</label>
-              <MultiSelect
-                options={instagramYears}
-                selected={instagramYear}
-                onChange={setInstagramYear}
-                placeholder="All Years"
-                className="w-full"
-              />
-            </div>
-            <div className="flex flex-col gap-1 min-w-[200px]">
-              <label className="text-xs font-medium text-foreground">Month</label>
-              <MultiSelect
-                options={instagramMonths.map(month => MONTH_NAMES[Number(month) - 1])}
-                selected={instagramMonth.map(month => MONTH_NAMES[Number(month) - 1])}
-                onChange={(selectedMonthNames) => {
-                  const selectedMonthNumbers = selectedMonthNames.map(name => 
-                    String(MONTH_NAMES.indexOf(name) + 1)
-                  );
-                  setInstagramMonth(selectedMonthNumbers);
-                }}
-                placeholder="All Months"
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Metrics Section with Company Filter */}
         <div className="bg-soft-rose border border-border shadow-soft rounded-2xl p-6 space-y-6">
           {/* Metrics Company Filter */}
@@ -299,9 +233,9 @@ const SocialMedia = () => {
             <div className="flex flex-col gap-1 min-w-[200px]">
               <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
-                options={instagramUniqueCompanies}
-                selected={instagramMetricsSelectedCompanies}
-                onChange={setInstagramMetricsSelectedCompanies}
+                options={instagramCompanies}
+                selected={metricsCompanies}
+                onChange={setMetricsCompanies}
                 placeholder="All Companies"
                 className="w-full"
               />
@@ -554,9 +488,9 @@ const SocialMedia = () => {
                 <div className="flex flex-col gap-1 min-w-[150px]">
                   <label className="text-xs font-medium text-gray-600 opacity-80">Company</label>
                   <MultiSelect
-                    options={instagramUniqueCompanies}
-                    selected={instagramPostTypeSelectedCompanies}
-                    onChange={setInstagramPostTypeSelectedCompanies}
+                    options={instagramCompanies}
+                    selected={postTypeCompanies}
+                    onChange={setPostTypeCompanies}
                     placeholder="All Companies"
                     className="w-full text-xs bg-white/80 border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-shadow duration-200"
                   />
@@ -570,9 +504,9 @@ const SocialMedia = () => {
                     <Pie
                       data={(() => {
                         // Filter data by selected brands
-                        const filteredData = instagramPostTypeSelectedCompanies.length === 0
+                        const filteredData = postTypeCompanies.length === 0
                           ? igData
-                          : igData.filter(row => instagramPostTypeSelectedCompanies.includes(row.company));
+                          : igData.filter(row => postTypeCompanies.includes(row.company));
 
                         const postTypeCount = filteredData.reduce((acc, row) => {
                           const postType = row.post_type || 'Unknown';
@@ -601,9 +535,9 @@ const SocialMedia = () => {
                         const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                         
                         // Filter data by selected brands (same logic as above)
-                        const filteredData = instagramPostTypeSelectedCompanies.length === 0
+                        const filteredData = postTypeCompanies.length === 0
                           ? igData
-                          : igData.filter(row => instagramPostTypeSelectedCompanies.includes(row.company));
+                          : igData.filter(row => postTypeCompanies.includes(row.company));
 
                         const postTypeCount = filteredData.reduce((acc, row) => {
                           const postType = row.post_type || 'Unknown';
@@ -625,9 +559,9 @@ const SocialMedia = () => {
                           const colors = ['#f472b6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                           
                           // Filter data to get the same order as the chart
-                          const filteredData = instagramPostTypeSelectedCompanies.length === 0
+                          const filteredData = postTypeCompanies.length === 0
                             ? igData
-                            : igData.filter(row => instagramPostTypeSelectedCompanies.includes(row.company));
+                            : igData.filter(row => postTypeCompanies.includes(row.company));
 
                           const postTypeCount = filteredData.reduce((acc, row) => {
                             const postType = row.post_type || 'Unknown';
@@ -750,9 +684,9 @@ const SocialMedia = () => {
             <div className="mt-4 flex flex-col gap-1 max-w-xs">
               <label className="text-xs font-medium text-foreground">Company</label>
               <MultiSelect
-                options={instagramUniqueCompanies}
-                selected={instagramPostsSelectedCompanies}
-                onChange={setInstagramPostsSelectedCompanies}
+                options={instagramCompanies}
+                selected={postsCompanies}
+                onChange={setPostsCompanies}
                 placeholder="All Companies"
                 className="w-full"
               />
@@ -771,7 +705,7 @@ const SocialMedia = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
               {(igData || [])
-                .filter(row => row && (instagramPostsSelectedCompanies.length === 0 || instagramPostsSelectedCompanies.includes(row.company)))
+                .filter(row => row && (postsCompanies.length === 0 || postsCompanies.includes(row.company)))
                 .sort((a, b) => (Number(b.likes) || 0) - (Number(a.likes) || 0))
                 .slice(0, 9)
                 .map((post, index) => (
@@ -885,6 +819,19 @@ const SocialMedia = () => {
 
   const TikTokSection = () => {
     const ttData = filteredTikTokData;
+    const [tiktokMetricsSelectedCompanies, setTiktokMetricsSelectedCompanies] = useState<string[]>([]);
+    const [tiktokSelectedCompanies, setTiktokSelectedCompanies] = useState<string[]>([]);
+
+    const tiktokUniqueCompanies = useMemo(() => {
+      const companies = new Set<string>();
+      ttData.forEach(row => {
+        if (row.company) {
+          companies.add(row.company);
+        }
+      });
+      return Array.from(companies).sort();
+    }, [ttData]);
+
     const ttMetricsData =
       tiktokMetricsSelectedCompanies.length === 0
         ? ttData
@@ -903,37 +850,6 @@ const SocialMedia = () => {
 
     return (
       <div className="space-y-6">
-        {/* TikTok Filters */}
-        <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
-          <div className="flex flex-wrap gap-4 items-start">
-            <div className="flex flex-col gap-1 min-w-[200px]">
-              <label className="text-xs font-medium text-foreground">Year</label>
-              <MultiSelect
-                options={tiktokYears}
-                selected={tiktokYear}
-                onChange={setTiktokYear}
-                placeholder="All Years"
-                className="w-full"
-              />
-            </div>
-            <div className="flex flex-col gap-1 min-w-[200px]">
-              <label className="text-xs font-medium text-foreground">Month</label>
-              <MultiSelect
-                options={tiktokMonths.map(month => MONTH_NAMES[Number(month) - 1])}
-                selected={tiktokMonth.map(month => MONTH_NAMES[Number(month) - 1])}
-                onChange={(selectedMonthNames) => {
-                  const selectedMonthNumbers = selectedMonthNames.map(name => 
-                    String(MONTH_NAMES.indexOf(name) + 1)
-                  );
-                  setTiktokMonth(selectedMonthNumbers);
-                }}
-                placeholder="All Months"
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* TikTok Metrics Container */}
         <div className="bg-soft-rose border border-border shadow-soft rounded-2xl p-6 space-y-6">
           {/* Metrics Company Filter */}
@@ -1551,6 +1467,30 @@ const SocialMedia = () => {
         </p>
       </div>
 
+      <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+        <div className="flex flex-wrap gap-4 items-start">
+          <div className="flex flex-col gap-1 min-w-[200px]">
+            <label className="text-xs font-medium text-foreground">Year</label>
+            <MultiSelect
+              options={years}
+              selected={selectedYears}
+              onChange={setSelectedYears}
+              placeholder="All Years"
+              className="w-full"
+            />
+          </div>
+          <div className="flex flex-col gap-1 min-w-[200px]">
+            <label className="text-xs font-medium text-foreground">Month</label>
+            <MultiSelect
+              options={months}
+              selected={selectedMonths}
+              onChange={setSelectedMonths}
+              placeholder="All Months"
+              className="w-full"
+            />
+          </div>
+        </div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-white to-gray-50 shadow-soft rounded-2xl p-1 border border-gray-200">

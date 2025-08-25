@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useId, useEffect } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,28 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const preventCloseRef = useRef(false);
+  const selectAllId = useId();
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
-    return options.filter(option => 
+    return options.filter(option =>
       option.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [options, searchTerm]);
+
+  // Close the popover when the user scrolls the page
+  useEffect(() => {
+    if (!open) return;
+
+    const handleScroll = () => {
+      preventCloseRef.current = false;
+      setOpen(false);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [open]);
 
   const handleSelectAll = () => {
     if (selected.length === options.length) {
@@ -40,6 +55,7 @@ export function MultiSelect({
       onChange(options);
     }
     // Keep popover open after selection
+    preventCloseRef.current = true;
     setOpen(true);
   };
 
@@ -50,18 +66,19 @@ export function MultiSelect({
       onChange([...selected, option]);
     }
     // Keep popover open after selection
+    preventCloseRef.current = true;
     setOpen(true);
   };
 
   // Prevent auto-close on internal interactions
   const handleOpenChange = (newOpen: boolean) => {
     // Only allow closing when explicitly triggered (clicking outside, escape, or trigger button)
-    // Don't auto-close on internal interactions
-    if (!newOpen) {
-      setOpen(false);
-    } else {
-      setOpen(true);
+    // Ignore close events that immediately follow an internal selection
+    if (!newOpen && preventCloseRef.current) {
+      preventCloseRef.current = false;
+      return;
     }
+    setOpen(newOpen);
   };
 
   const allSelected = selected.length === options.length;
@@ -89,14 +106,11 @@ export function MultiSelect({
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-full p-0 bg-white border-border rounded-xl z-[9999]" 
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] p-0 bg-white border-border rounded-xl"
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => {
-            setOpen(false);
-          }}
-          onEscapeKeyDown={() => setOpen(false)}
+          sideOffset={4}
         >
           <div className="flex items-center border-b border-border px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
@@ -113,7 +127,7 @@ export function MultiSelect({
               className="flex items-center space-x-2 p-3 hover:bg-muted/30 cursor-pointer"
             >
               <Checkbox
-                id="select-all"
+                id={selectAllId}
                 checked={allSelected}
                 onCheckedChange={handleSelectAll}
                 className={cn(
@@ -121,7 +135,7 @@ export function MultiSelect({
                 )}
               />
               <label
-                htmlFor="select-all"
+                htmlFor={selectAllId}
                 className="text-sm font-medium leading-none cursor-pointer flex-1"
               >
                 {allSelected ? "Deselect All" : "Select All"}
