@@ -225,19 +225,21 @@ const DistributionComparison: React.FC<ComparisonProps> = ({
   </div>
 );
 
-interface TopPublishersProps {
-  data: DataRow[];
+interface TopPublishersCardProps {
+  chartId: string;
   selectedBrands: string[];
   onBrandsChange: (brands: string[]) => void;
   brandsWithSpend: { brand: string; totalSpend: number }[];
+  data: DataRow[];
   tabId: string;
 }
 
-const TopPublishersSection: React.FC<TopPublishersProps> = ({
-  data,
+const TopPublishersCard: React.FC<TopPublishersCardProps> = ({
+  chartId,
   selectedBrands,
   onBrandsChange,
   brandsWithSpend,
+  data,
   tabId,
 }) => {
   const publishersRankingData = useMemo(() => {
@@ -248,7 +250,8 @@ const TopPublishersSection: React.FC<TopPublishersProps> = ({
     const publisherSpends = filteredData.reduce((acc, row) => {
       const publisher = row.publisher;
       if (!publisher) return acc;
-      acc[publisher] = (acc[publisher] || 0) + (Number(row["spend (usd)"]) || 0);
+      acc[publisher] =
+        (acc[publisher] || 0) + (Number(row["spend (usd)"]) || 0);
       return acc;
     }, {} as Record<string, number>);
     const totalSpend = Object.values(publisherSpends).reduce(
@@ -272,113 +275,154 @@ const TopPublishersSection: React.FC<TopPublishersProps> = ({
     return originalSpend.toFixed(0);
   };
 
-  const formatDonutValue = (value: number) => {
+  const formatTotalValue = (value: number) => {
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
     return value.toFixed(0);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-lg font-semibold text-foreground mb-2">
-          Top Publishers by Spend
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Publisher ranking by selected brands
-        </p>
-      </div>
-      <Card className="bg-white border-border shadow-soft rounded-2xl">
-        <CardHeader className="pb-4">
-          <div className="mb-4">
-            <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
-              <div className="flex flex-col gap-1 min-w-[200px]">
-                <label className="text-xs font-medium text-foreground">
-                  Brand
-                </label>
-                <MultiSelectWithTotals
-                  key={`publishers-${tabId}`}
-                  options={brandsWithSpend}
-                  selected={selectedBrands}
-                  onChange={onBrandsChange}
-                  placeholder="All Brands"
-                  className="w-full"
-                />
-              </div>
+    <Card className="bg-white border-border shadow-soft rounded-2xl">
+      <CardHeader className="pb-4">
+        <div className="mb-4">
+          <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
+            <div className="flex flex-col gap-1 min-w-[200px]">
+              <label className="text-xs font-medium text-foreground">
+                Brand
+              </label>
+              <MultiSelectWithTotals
+                key={`${chartId}-${tabId}`}
+                options={brandsWithSpend}
+                selected={selectedBrands}
+                onChange={onBrandsChange}
+                placeholder="All Brands"
+                className="w-full"
+              />
             </div>
           </div>
+        </div>
 
-          <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
-            {selectedBrands.length === 0
-              ? "All Brands (Gross)"
-              : selectedBrands.length === 1
-              ? selectedBrands[0]
-              : `${selectedBrands.length} brands selected`}
-          </CardTitle>
+        <CardTitle className="text-md font-semibold text-foreground text-center mb-2">
+          {selectedBrands.length === 0
+            ? "All Brands (Gross)"
+            : selectedBrands.length === 1
+            ? selectedBrands[0]
+            : `${selectedBrands.length} brands selected`}
+        </CardTitle>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Top 30 Publishers - Total: $
-            {formatDonutValue(
-              publishersRankingData.reduce((sum, item) => sum + item.spend, 0)
-            )}
-          </p>
-        </CardHeader>
-        <CardContent>
-          {publishersRankingData.length > 0 ? (
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
-              {publishersRankingData.map((publisher, index) => {
-                const maxSpend = publishersRankingData[0]?.spend || 1;
-                const percentage = (publisher.spend / maxSpend) * 100;
-                return (
-                  <div
-                    key={publisher.name}
-                    className="flex items-center gap-2 p-2 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:shadow-sm transition-all duration-200"
-                  >
-                    <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-full flex items-center justify-center text-xs font-bold">
-                      {index + 1}
-                    </div>
-                    <div
-                      className="flex-shrink-0 w-32 text-xs font-semibold text-gray-800 truncate"
-                      title={publisher.name}
-                    >
-                      {publisher.name}
-                    </div>
-                    <TooltipProvider delayDuration={100}>
-                      <UITooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex-1 relative cursor-pointer">
-                            <div className="w-full bg-gray-200 rounded-full h-4">
-                              <div
-                                className="h-4 rounded-full bg-gradient-to-r from-pink-400 to-rose-400"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs">
-                            Share: {publisher.percentage.toFixed(1)}%
-                          </p>
-                          <p className="text-xs">
-                            Spend: ${formatSpendValue(publisher.originalSpend)}
-                          </p>
-                        </TooltipContent>
-                      </UITooltip>
-                    </TooltipProvider>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-40">
-              <p className="text-muted-foreground text-sm">No data available</p>
-            </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Top 30 Publishers - Total: $
+          {formatTotalValue(
+            publishersRankingData.reduce((sum, item) => sum + item.spend, 0)
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </p>
+      </CardHeader>
+      <CardContent>
+        {publishersRankingData.length > 0 ? (
+          <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+            {publishersRankingData.map((publisher, index) => {
+              const maxSpend = publishersRankingData[0]?.spend || 1;
+              const percentage = (publisher.spend / maxSpend) * 100;
+              return (
+                <div
+                  key={publisher.name}
+                  className="flex items-center gap-2 p-2 bg-gradient-to-r from-pink-50 to-rose-50 rounded-lg border border-pink-100 hover:shadow-sm transition-all duration-200"
+                >
+                  <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                    {index + 1}
+                  </div>
+                  <div
+                    className="flex-shrink-0 w-32 text-xs font-semibold text-gray-800 truncate"
+                    title={publisher.name}
+                  >
+                    {publisher.name}
+                  </div>
+                  <TooltipProvider delayDuration={100}>
+                    <UITooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex-1 relative cursor-pointer">
+                          <div className="w-full bg-gray-200 rounded-full h-4">
+                            <div
+                              className="h-4 rounded-full bg-gradient-to-r from-pink-400 to-rose-400"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">
+                          Share: {publisher.percentage.toFixed(1)}%
+                        </p>
+                        <p className="text-xs">
+                          Spend: ${formatSpendValue(publisher.originalSpend)}
+                        </p>
+                      </TooltipContent>
+                    </UITooltip>
+                  </TooltipProvider>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-40">
+            <p className="text-muted-foreground text-sm">No data available</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
+
+interface TopPublishersComparisonProps {
+  leftSelectedBrands: string[];
+  rightSelectedBrands: string[];
+  onLeftBrandsChange: (brands: string[]) => void;
+  onRightBrandsChange: (brands: string[]) => void;
+  leftBrandsWithSpend: { brand: string; totalSpend: number }[];
+  rightBrandsWithSpend: { brand: string; totalSpend: number }[];
+  data: DataRow[];
+  tabId: string;
+}
+
+const TopPublishersComparison: React.FC<TopPublishersComparisonProps> = ({
+  leftSelectedBrands,
+  rightSelectedBrands,
+  onLeftBrandsChange,
+  onRightBrandsChange,
+  leftBrandsWithSpend,
+  rightBrandsWithSpend,
+  data,
+  tabId,
+}) => (
+  <div className="space-y-6">
+    <div className="text-center">
+      <h2 className="text-lg font-semibold text-foreground mb-2">
+        Top Publishers by Spend
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        Publisher ranking by selected brands
+      </p>
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <TopPublishersCard
+        chartId="left-top-publishers"
+        selectedBrands={leftSelectedBrands}
+        onBrandsChange={onLeftBrandsChange}
+        brandsWithSpend={leftBrandsWithSpend}
+        data={data}
+        tabId={tabId}
+      />
+      <TopPublishersCard
+        chartId="right-top-publishers"
+        selectedBrands={rightSelectedBrands}
+        onBrandsChange={onRightBrandsChange}
+        brandsWithSpend={rightBrandsWithSpend}
+        data={data}
+        tabId={tabId}
+      />
+    </div>
+  </div>
+);
 
 interface ConsolidatedInvestmentDistributionProps {
   data: DataRow[];
@@ -394,13 +438,15 @@ const ConsolidatedInvestmentDistribution: React.FC<ConsolidatedInvestmentDistrib
   const [channelRightChartBrands, setChannelRightChartBrands] = useState<string[]>([]);
   const [placementLeftChartBrands, setPlacementLeftChartBrands] = useState<string[]>([]);
   const [placementRightChartBrands, setPlacementRightChartBrands] = useState<string[]>([]);
-  const [publishersSelectedBrands, setPublishersSelectedBrands] = useState<string[]>([]);
+  const [publishersLeftSelectedBrands, setPublishersLeftSelectedBrands] = useState<string[]>([]);
+  const [publishersRightSelectedBrands, setPublishersRightSelectedBrands] = useState<string[]>([]);
 
   const [isChannelLeftInit, setIsChannelLeftInit] = useState(false);
   const [isChannelRightInit, setIsChannelRightInit] = useState(false);
   const [isPlacementLeftInit, setIsPlacementLeftInit] = useState(false);
   const [isPlacementRightInit, setIsPlacementRightInit] = useState(false);
-  const [isPublishersInit, setIsPublishersInit] = useState(false);
+  const [isPublishersLeftInit, setIsPublishersLeftInit] = useState(false);
+  const [isPublishersRightInit, setIsPublishersRightInit] = useState(false);
 
   useEffect(() => {
     console.log(`🔄 ConsolidatedInvestmentDistribution MOUNTED - TabId: ${tabId}`);
@@ -431,7 +477,8 @@ const ConsolidatedInvestmentDistribution: React.FC<ConsolidatedInvestmentDistrib
   const channelRightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
   const placementLeftBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
   const placementRightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
-  const publishersBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const publishersLeftBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
+  const publishersRightBrandsWithSpend = useMemo(() => createBrandsWithSpend(), [createBrandsWithSpend]);
 
   useEffect(() => {
     if (uniqueBrands.length > 0 && !isChannelLeftInit) {
@@ -474,11 +521,26 @@ const ConsolidatedInvestmentDistribution: React.FC<ConsolidatedInvestmentDistrib
   }, [uniqueBrands, isPlacementRightInit, placementRightBrandsWithSpend]);
 
   useEffect(() => {
-    if (uniqueBrands.length > 0 && !isPublishersInit) {
-      setPublishersSelectedBrands([]);
-      setIsPublishersInit(true);
+    if (uniqueBrands.length > 0 && !isPublishersLeftInit) {
+      setPublishersLeftSelectedBrands([]);
+      setIsPublishersLeftInit(true);
     }
-  }, [uniqueBrands.length, isPublishersInit]);
+  }, [uniqueBrands.length, isPublishersLeftInit]);
+
+  useEffect(() => {
+    if (uniqueBrands.length > 0 && !isPublishersRightInit) {
+      const aventBrands = uniqueBrands.filter((brand) =>
+        brand.toLowerCase().includes("avent")
+      );
+      if (aventBrands.length > 0) {
+        setPublishersRightSelectedBrands([aventBrands[0]]);
+      } else {
+        const topBrand = publishersRightBrandsWithSpend[0]?.brand;
+        setPublishersRightSelectedBrands(topBrand ? [topBrand] : []);
+      }
+      setIsPublishersRightInit(true);
+    }
+  }, [uniqueBrands, isPublishersRightInit, publishersRightBrandsWithSpend]);
 
   const handleChannelLeftChartBrandsChange = useCallback(
     (newBrands: string[]) => {
@@ -520,12 +582,22 @@ const ConsolidatedInvestmentDistribution: React.FC<ConsolidatedInvestmentDistrib
     [tabId]
   );
 
-  const handlePublishersSelectedBrandsChange = useCallback(
+  const handlePublishersLeftSelectedBrandsChange = useCallback(
     (newBrands: string[]) => {
-      console.log(`📈 Publishers Brands Change - TabId: ${tabId}`, {
+      console.log(`⬅️ Publishers Left Brands Change - TabId: ${tabId}`, {
         to: newBrands,
       });
-      setPublishersSelectedBrands([...newBrands]);
+      setPublishersLeftSelectedBrands([...newBrands]);
+    },
+    [tabId]
+  );
+
+  const handlePublishersRightSelectedBrandsChange = useCallback(
+    (newBrands: string[]) => {
+      console.log(`➡️ Publishers Right Brands Change - TabId: ${tabId}`, {
+        to: newBrands,
+      });
+      setPublishersRightSelectedBrands([...newBrands]);
     },
     [tabId]
   );
@@ -593,11 +665,14 @@ const ConsolidatedInvestmentDistribution: React.FC<ConsolidatedInvestmentDistrib
         </TabsContent>
 
         <TabsContent value="publishers" className="mt-6">
-          <TopPublishersSection
+          <TopPublishersComparison
             data={data}
-            selectedBrands={publishersSelectedBrands}
-            onBrandsChange={handlePublishersSelectedBrandsChange}
-            brandsWithSpend={publishersBrandsWithSpend}
+            leftSelectedBrands={publishersLeftSelectedBrands}
+            rightSelectedBrands={publishersRightSelectedBrands}
+            onLeftBrandsChange={handlePublishersLeftSelectedBrandsChange}
+            onRightBrandsChange={handlePublishersRightSelectedBrandsChange}
+            leftBrandsWithSpend={publishersLeftBrandsWithSpend}
+            rightBrandsWithSpend={publishersRightBrandsWithSpend}
             tabId={tabId}
           />
         </TabsContent>
