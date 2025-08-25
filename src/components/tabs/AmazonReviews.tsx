@@ -9,7 +9,6 @@ import {
   Bar,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   ScatterChart,
@@ -109,7 +108,13 @@ const AmazonReviews = () => {
   const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/consolidated_products.csv");
   const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSVData<ReviewRow>("/consolidated_reviews.csv");
 
-  const { products, brandStats, ratingDistribution, topProducts } = useMemo(() => {
+  const {
+    products,
+    brandStats,
+    ratingDistributionAll,
+    ratingDistributionAvent,
+    topProducts,
+  } = useMemo(() => {
     const prodRows = (productRaw as ProductRow[]).map(p => {
       const price = typeof p.Price === "number" ? p.Price : parseFloat(String(p.Price).replace(/[$,]/g, ""));
       const originalPrice = p["Original Price"] ? parseFloat(String(p["Original Price"]).replace(/[$,]/g, "")) : null;
@@ -183,14 +188,31 @@ const AmazonReviews = () => {
       avgRating: s.totalRating / s.productCount,
     }));
 
-    const ratingCounts = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: reviews.filter(rv => Number(rv.Rating) === r).length }));
+    const ratingCountsAll = [1, 2, 3, 4, 5].map(r => ({
+      rating: r,
+      count: reviews.filter(rv => Number(rv.Rating) === r).length,
+    }));
+
+    const aventReviews = products
+      .filter(p => p.brand.toLowerCase().includes("avent"))
+      .flatMap(p => p.reviews);
+    const ratingCountsAvent = [1, 2, 3, 4, 5].map(r => ({
+      rating: r,
+      count: aventReviews.filter(rv => Number(rv.Rating) === r).length,
+    }));
 
     const topProducts = [...products]
       .filter(p => p.reviewCount > 0)
       .sort((a, b) => (b.avgReviewRating! - a.avgReviewRating!))
       .slice(0, 5);
 
-    return { products, brandStats, ratingDistribution: ratingCounts, topProducts };
+    return {
+      products,
+      brandStats,
+      ratingDistributionAll: ratingCountsAll,
+      ratingDistributionAvent: ratingCountsAvent,
+      topProducts,
+    };
   }, [productRaw, reviewRaw]);
 
   const sortedBrandStats = useMemo(
@@ -355,16 +377,45 @@ const AmazonReviews = () => {
           <CardTitle>Review Rating Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ratingDistribution}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="rating" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#EA899A" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <p className="mb-2 text-sm font-medium text-muted-foreground">
+                All Brands
+              </p>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ratingDistributionAll}>
+                    <XAxis dataKey="rating" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="count"
+                      fill="#EA899A"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-sm font-medium text-muted-foreground">
+                Avent
+              </p>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ratingDistributionAvent}>
+                    <XAxis dataKey="rating" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar
+                      dataKey="count"
+                      fill="#EA899A"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
