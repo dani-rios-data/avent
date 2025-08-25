@@ -27,11 +27,18 @@ interface ProductRow {
   "Product Title": string;
   Price: number | string;
   "Original Price": number | string;
+  Currency: string;
+  Country: string;
   Brand: string;
   "Star Rating": number;
   "Number of Ratings": number;
   "Product URL": string;
   "Product Photo": string;
+  Availability: string;
+  "Is Best Seller": string;
+  "Is Amazon Choice": string;
+  "Is Prime": string;
+  "Sales Volume": string;
 }
 
 interface ReviewRow {
@@ -48,11 +55,18 @@ interface Product {
   title: string;
   price: number;
   originalPrice: number | null;
+  currency: string;
+  country: string;
   brand: string;
   starRating: number;
   numberOfRatings: number;
   url: string;
   photo: string;
+  availability: string;
+  isBestSeller: boolean;
+  isAmazonChoice: boolean;
+  isPrime: boolean;
+  salesVolume: string | null;
   reviews: ReviewRow[];
   avgReviewRating: number | null;
   reviewCount: number;
@@ -105,11 +119,18 @@ const AmazonReviews = () => {
         title: p["Product Title"],
         price,
         originalPrice,
+        currency: p.Currency,
+        country: p.Country,
         brand,
         starRating: Number(p["Star Rating"]),
         numberOfRatings: Number(p["Number of Ratings"]),
         url: p["Product URL"],
         photo: p["Product Photo"],
+        availability: p.Availability,
+        isBestSeller: p["Is Best Seller"]?.toLowerCase() === "true",
+        isAmazonChoice: p["Is Amazon Choice"]?.toLowerCase() === "true",
+        isPrime: p["Is Prime"]?.toLowerCase() === "true",
+        salesVolume: p["Sales Volume"] || null,
       };
     });
 
@@ -385,16 +406,16 @@ const AmazonReviews = () => {
             {products.slice(0, 6).map(p => (
               <Card key={p.asin} className="overflow-hidden">
                 <CardHeader className="p-0">
-                  <img src={p.photo} alt={p.title} className="w-full h-40 object-cover" />
+                  <img src={p.photo} alt={p.title} className="w-full h-60 object-cover" />
                 </CardHeader>
                 <CardContent className="p-4 space-y-2">
                   <CardTitle className="text-sm line-clamp-2">{p.title}</CardTitle>
                   <CardDescription>{p.brand}</CardDescription>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">${p.price.toFixed(2)}</span>
+                    <span className="font-semibold">{p.currency} {p.price.toFixed(2)}</span>
                     {p.originalPrice && (
                       <>
-                        <span className="text-sm line-through text-muted-foreground">${p.originalPrice.toFixed(2)}</span>
+                        <span className="text-sm line-through text-muted-foreground">{p.currency} {p.originalPrice.toFixed(2)}</span>
                         <Badge variant="secondary">
                           {(((p.originalPrice - p.price) / p.originalPrice) * 100).toFixed(0)}% off
                         </Badge>
@@ -404,6 +425,20 @@ const AmazonReviews = () => {
                   <div className="text-sm text-muted-foreground">
                     ⭐ {(p.avgReviewRating ?? p.starRating).toFixed(2)} ({formatNumber(p.reviewCount || p.numberOfRatings)})
                   </div>
+                  <dl className="text-xs space-y-1">
+                    <div className="flex justify-between"><dt>ASIN</dt><dd>{p.asin}</dd></div>
+                    <div className="flex justify-between"><dt>Currency</dt><dd>{p.currency}</dd></div>
+                    <div className="flex justify-between"><dt>Country</dt><dd>{p.country}</dd></div>
+                    {p.availability && (
+                      <div className="flex justify-between"><dt>Availability</dt><dd>{p.availability}</dd></div>
+                    )}
+                    <div className="flex justify-between"><dt>Best Seller</dt><dd>{p.isBestSeller ? "Yes" : "No"}</dd></div>
+                    <div className="flex justify-between"><dt>Amazon Choice</dt><dd>{p.isAmazonChoice ? "Yes" : "No"}</dd></div>
+                    <div className="flex justify-between"><dt>Prime</dt><dd>{p.isPrime ? "Yes" : "No"}</dd></div>
+                    {p.salesVolume && (
+                      <div className="flex justify-between"><dt>Sales Volume</dt><dd>{p.salesVolume}</dd></div>
+                    )}
+                  </dl>
                   <div className="flex gap-2 mt-2">
                     <Button asChild variant="outline" size="sm">
                       <a href={p.url} target="_blank" rel="noopener noreferrer">
