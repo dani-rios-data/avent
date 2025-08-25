@@ -1,7 +1,7 @@
 import { useMemo, Fragment, useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, Store, Tag } from "lucide-react";
+import { AlertCircle, Loader2, Store, Tag, Star } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
 import { MultiSelect } from "@/components/ui/multi-select";
 import {
@@ -16,7 +16,6 @@ import {
   Legend,
 } from "recharts";
 import type { TooltipProps } from "recharts";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -229,6 +228,16 @@ const AmazonReviews = () => {
       priceTicks: ticks,
     };
   }, [productRaw, reviewRaw]);
+
+  const topProductAsins = useMemo(
+    () => new Set(topProducts.map(p => p.asin)),
+    [topProducts],
+  );
+
+  const galleryProducts = useMemo(() => {
+    const others = products.filter(p => !topProductAsins.has(p.asin));
+    return [...topProducts, ...others].slice(0, 6);
+  }, [products, topProducts, topProductAsins]);
 
   const sortedBrandStats = useMemo(
     () => [...brandStats].sort((a, b) => b.totalReviews - a.totalReviews),
@@ -469,45 +478,22 @@ const AmazonReviews = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Top Rated Products</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead className="text-right">Avg Rating</TableHead>
-                <TableHead className="text-right">Reviews</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topProducts.map(p => (
-                <TableRow key={p.asin}>
-                  <TableCell>{p.title}</TableCell>
-                  <TableCell>{p.brand}</TableCell>
-                  <TableCell className="text-right">{p.avgReviewRating?.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(p.reviewCount)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Product Gallery</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.slice(0, 6).map(p => (
+            {galleryProducts.map(p => (
               <Card key={p.asin} className="overflow-hidden">
                 <CardHeader className="p-0">
                   <img src={p.photo} alt={p.title} className="w-full h-60 object-cover" />
                 </CardHeader>
                 <CardContent className="p-4 space-y-2">
-                  <CardTitle className="text-sm line-clamp-2">{p.title}</CardTitle>
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-sm line-clamp-2">{p.title}</CardTitle>
+                    {topProductAsins.has(p.asin) && (
+                      <Star className="h-4 w-4 text-yellow-500 shrink-0" />
+                    )}
+                  </div>
                   <CardDescription>{p.brand}</CardDescription>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{p.currency} {p.price.toFixed(2)}</span>
