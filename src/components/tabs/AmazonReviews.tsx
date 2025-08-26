@@ -14,7 +14,6 @@ import {
   ScatterChart,
   Scatter,
   Legend,
-  LabelList,
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import { formatNumber } from "@/lib/utils";
@@ -528,7 +527,7 @@ const AmazonReviews = () => {
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <div className="mb-2 w-40 flex flex-col gap-1">
+              <div className="my-4 w-40 flex flex-col gap-1">
                 <label className="text-xs font-medium text-foreground">Brand</label>
                 <MultiSelect
                   options={distributionBrands}
@@ -540,18 +539,16 @@ const AmazonReviews = () => {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ratingDistribution1}>
-                    <XAxis dataKey="rating" />
-                    <YAxis />
+                    <XAxis dataKey="rating" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip content={<RatingDistributionTooltip />} />
-                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={20}>
-                      <LabelList dataKey="percentage" position="top" formatter={(v: number) => `${v.toFixed(1)}%`} />
-                    </Bar>
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
             <div>
-              <div className="mb-2 w-40 flex flex-col gap-1">
+              <div className="my-4 w-40 flex flex-col gap-1">
                 <label className="text-xs font-medium text-foreground">Brand</label>
                 <MultiSelect
                   options={distributionBrands}
@@ -563,12 +560,10 @@ const AmazonReviews = () => {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ratingDistribution2}>
-                    <XAxis dataKey="rating" />
-                    <YAxis />
+                    <XAxis dataKey="rating" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
                     <Tooltip content={<RatingDistributionTooltip />} />
-                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={20}>
-                      <LabelList dataKey="percentage" position="top" formatter={(v: number) => `${v.toFixed(1)}%`} />
-                    </Bar>
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
