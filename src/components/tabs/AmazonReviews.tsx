@@ -5,6 +5,13 @@ import { AlertCircle, Loader2, Store, Tag, Star } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
 import { MultiSelect } from "@/components/ui/multi-select";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   BarChart,
   Bar,
   XAxis,
@@ -47,6 +54,13 @@ interface ReviewRow {
   "Review Title": string;
   "Review Text": string;
   "Review Link": string;
+}
+
+interface RatingDistributionRow {
+  asin: string;
+  product_title: string;
+  rating: number;
+  count: number;
 }
 
 interface Product {
@@ -112,12 +126,13 @@ const PriceRatingTooltip = ({
 const AmazonReviews = () => {
   const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/consolidated_products.csv");
   const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSVData<ReviewRow>("/consolidated_reviews.csv");
+  const { data: ratingDistributionRaw, loading: ratingDistLoading, error: ratingDistError } = useCSVData<RatingDistributionRow>("/amazon_rating_distribution.csv");
 
   const {
     products,
     brandStats,
-    ratingDistributionAll,
-    ratingDistributionAvent,
+    ratingDistributions,
+    distributionBrands,
     topProducts,
     priceDomain,
     priceTicks,
@@ -195,18 +210,25 @@ const AmazonReviews = () => {
       avgRating: s.totalRating / s.productCount,
     }));
 
-    const ratingCountsAll = [1, 2, 3, 4, 5].map(r => ({
-      rating: r,
-      count: reviews.filter(rv => Number(rv.Rating) === r).length,
-    }));
+    const asinToBrand = new Map<string, string>();
+    products.forEach(p => asinToBrand.set(p.asin, p.brand));
 
-    const aventReviews = products
-      .filter(p => p.brand.toLowerCase().includes("avent"))
-      .flatMap(p => p.reviews);
-    const ratingCountsAvent = [1, 2, 3, 4, 5].map(r => ({
-      rating: r,
-      count: aventReviews.filter(rv => Number(rv.Rating) === r).length,
-    }));
+    const ratingRows = (ratingDistributionRaw as RatingDistributionRow[]) || [];
+    const distributionMap: Record<string, { rating: number; count: number }[]> = {};
+    const allCounts = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: 0 }));
+    const brandSet = new Set<string>();
+    ratingRows.forEach(row => {
+      const brand = asinToBrand.get(row.asin) || "Unknown";
+      brandSet.add(brand);
+      if (!distributionMap[brand]) {
+        distributionMap[brand] = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: 0 }));
+      }
+      const idx = Math.max(0, Math.min(4, Number(row.rating) - 1));
+      distributionMap[brand][idx].count += Number(row.count);
+      allCounts[idx].count += Number(row.count);
+    });
+    distributionMap["All"] = allCounts;
+    const distributionBrands = Array.from(brandSet);
 
     const topProducts = [...products]
       .filter(p => p.reviewCount > 0)
@@ -227,13 +249,13 @@ const AmazonReviews = () => {
     return {
       products,
       brandStats,
-      ratingDistributionAll: ratingCountsAll,
-      ratingDistributionAvent: ratingCountsAvent,
+      ratingDistributions: distributionMap,
+      distributionBrands,
       topProducts,
       priceDomain: [niceMin, niceMax] as [number, number],
       priceTicks: ticks,
     };
-  }, [productRaw, reviewRaw]);
+  }, [productRaw, reviewRaw, ratingDistributionRaw]);
 
   const topProductAsins = useMemo(
     () => new Set(topProducts.map(p => p.asin)),
@@ -288,7 +310,23 @@ const AmazonReviews = () => {
     [productsByBrand, selectedPriceBrands]
   );
 
-  if (productsLoading || reviewsLoading) {
+  const [selectedRatingBrand1, setSelectedRatingBrand1] = useState<string>("All");
+  const [selectedRatingBrand2, setSelectedRatingBrand2] = useState<string>("All");
+  useEffect(() => {
+    const aventBrand = distributionBrands.find(b => b.toLowerCase().includes("avent"));
+    if (aventBrand) setSelectedRatingBrand2(aventBrand);
+  }, [distributionBrands]);
+
+  const ratingDistribution1 = useMemo(
+    () => ratingDistributions[selectedRatingBrand1] || ratingDistributions["All"] || [],
+    [selectedRatingBrand1, ratingDistributions]
+  );
+  const ratingDistribution2 = useMemo(
+    () => ratingDistributions[selectedRatingBrand2] || ratingDistributions["All"] || [],
+    [selectedRatingBrand2, ratingDistributions]
+  );
+
+  if (productsLoading || reviewsLoading || ratingDistLoading) {
     return (
       <div className="min-h-64 flex items-center justify-center">
         <Card className="p-8 bg-white shadow-gentle rounded-2xl">
@@ -301,13 +339,13 @@ const AmazonReviews = () => {
     );
   }
 
-  if (productsError || reviewsError) {
+  if (productsError || reviewsError || ratingDistError) {
     return (
       <div className="p-6">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Error loading Amazon review data: {productsError || reviewsError}
+            Error loading Amazon review data: {productsError || reviewsError || ratingDistError}
           </AlertDescription>
         </Alert>
       </div>
@@ -463,39 +501,57 @@ const AmazonReviews = () => {
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <p className="mb-2 text-sm font-medium text-muted-foreground">
-                All Brands
-              </p>
+              <div className="mb-2 w-40 flex flex-col gap-1">
+                <label className="text-xs font-medium text-foreground">Brand</label>
+                <Select value={selectedRatingBrand1} onValueChange={setSelectedRatingBrand1}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All</SelectItem>
+                    {distributionBrands.map(b => (
+                      <SelectItem key={b} value={b}>
+                        {b}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={ratingDistributionAll}>
+                  <BarChart data={ratingDistribution1}>
                     <XAxis dataKey="rating" />
                     <YAxis />
                     <Tooltip />
-                    <Bar
-                      dataKey="count"
-                      fill="#EA899A"
-                      radius={[8, 8, 0, 0]}
-                    />
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
             <div>
-              <p className="mb-2 text-sm font-medium text-muted-foreground">
-                Avent
-              </p>
+              <div className="mb-2 w-40 flex flex-col gap-1">
+                <label className="text-xs font-medium text-foreground">Brand</label>
+                <Select value={selectedRatingBrand2} onValueChange={setSelectedRatingBrand2}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All</SelectItem>
+                    {distributionBrands.map(b => (
+                      <SelectItem key={b} value={b}>
+                        {b}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={ratingDistributionAvent}>
+                  <BarChart data={ratingDistribution2}>
                     <XAxis dataKey="rating" />
                     <YAxis />
                     <Tooltip />
-                    <Bar
-                      dataKey="count"
-                      fill="#EA899A"
-                      radius={[8, 8, 0, 0]}
-                    />
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
