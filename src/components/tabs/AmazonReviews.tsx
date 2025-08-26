@@ -97,6 +97,12 @@ const PriceRatingTooltip = ({
         <div className="font-medium text-foreground">{product.brand}</div>
         <div className="mb-1 text-muted-foreground">{product.title}</div>
         <div className="font-semibold text-primary">{price}</div>
+        <div className="text-muted-foreground">
+          Rating: {product.starRating.toFixed(2)}
+        </div>
+        <div className="text-muted-foreground">
+          {formatNumber(product.numberOfRatings)} reviews
+        </div>
       </div>
     );
   }
