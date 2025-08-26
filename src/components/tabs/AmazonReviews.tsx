@@ -1,16 +1,9 @@
-import { useMemo, Fragment, useState, useEffect } from "react";
+import { useMemo, Fragment, useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Loader2, Store, Tag, Star } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
 import { MultiSelect } from "@/components/ui/multi-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   BarChart,
   Bar,
@@ -21,6 +14,7 @@ import {
   ScatterChart,
   Scatter,
   Legend,
+  LabelList,
 } from "recharts";
 import type { TooltipProps } from "recharts";
 import { formatNumber } from "@/lib/utils";
@@ -117,6 +111,23 @@ const PriceRatingTooltip = ({
         <div className="text-muted-foreground">
           {formatNumber(product.numberOfRatings)} reviews
         </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const RatingDistributionTooltip = ({
+  active,
+  payload,
+}: TooltipProps<number, string>) => {
+  if (active && payload?.length) {
+    const data = payload[0].payload as { rating: number; count: number; percentage: number };
+    return (
+      <div className="rounded-lg border bg-background/80 backdrop-blur px-3 py-2 text-xs shadow-lg">
+        <div className="font-medium text-foreground">{data.rating} Stars</div>
+        <div className="text-muted-foreground">{formatNumber(data.count)} reviews</div>
+        <div className="text-muted-foreground">{data.percentage.toFixed(1)}%</div>
       </div>
     );
   }
@@ -310,20 +321,36 @@ const AmazonReviews = () => {
     [productsByBrand, selectedPriceBrands]
   );
 
-  const [selectedRatingBrand1, setSelectedRatingBrand1] = useState<string>("All");
-  const [selectedRatingBrand2, setSelectedRatingBrand2] = useState<string>("All");
+  const [selectedRatingBrands1, setSelectedRatingBrands1] = useState<string[]>([]);
+  const [selectedRatingBrands2, setSelectedRatingBrands2] = useState<string[]>([]);
   useEffect(() => {
+    setSelectedRatingBrands1(distributionBrands);
     const aventBrand = distributionBrands.find(b => b.toLowerCase().includes("avent"));
-    if (aventBrand) setSelectedRatingBrand2(aventBrand);
+    if (aventBrand) setSelectedRatingBrands2([aventBrand]);
   }, [distributionBrands]);
 
+  const aggregateDistributions = useCallback(
+    (brands: string[]) => {
+      const counts = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: 0 }));
+      brands.forEach(brand => {
+        (ratingDistributions[brand] || []).forEach(({ rating, count }) => {
+          const idx = Math.max(0, Math.min(4, rating - 1));
+          counts[idx].count += count;
+        });
+      });
+      const total = counts.reduce((sum, d) => sum + d.count, 0);
+      return counts.map(d => ({ ...d, percentage: total ? (d.count / total) * 100 : 0 }));
+    },
+    [ratingDistributions]
+  );
+
   const ratingDistribution1 = useMemo(
-    () => ratingDistributions[selectedRatingBrand1] || ratingDistributions["All"] || [],
-    [selectedRatingBrand1, ratingDistributions]
+    () => aggregateDistributions(selectedRatingBrands1.length ? selectedRatingBrands1 : distributionBrands),
+    [selectedRatingBrands1, distributionBrands, aggregateDistributions]
   );
   const ratingDistribution2 = useMemo(
-    () => ratingDistributions[selectedRatingBrand2] || ratingDistributions["All"] || [],
-    [selectedRatingBrand2, ratingDistributions]
+    () => aggregateDistributions(selectedRatingBrands2.length ? selectedRatingBrands2 : distributionBrands),
+    [selectedRatingBrands2, distributionBrands, aggregateDistributions]
   );
 
   if (productsLoading || reviewsLoading || ratingDistLoading) {
@@ -503,27 +530,22 @@ const AmazonReviews = () => {
             <div>
               <div className="mb-2 w-40 flex flex-col gap-1">
                 <label className="text-xs font-medium text-foreground">Brand</label>
-                <Select value={selectedRatingBrand1} onValueChange={setSelectedRatingBrand1}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All</SelectItem>
-                    {distributionBrands.map(b => (
-                      <SelectItem key={b} value={b}>
-                        {b}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  options={distributionBrands}
+                  selected={selectedRatingBrands1}
+                  onChange={setSelectedRatingBrands1}
+                  placeholder="Select brands"
+                />
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ratingDistribution1}>
                     <XAxis dataKey="rating" />
                     <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} />
+                    <Tooltip content={<RatingDistributionTooltip />} />
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={20}>
+                      <LabelList dataKey="percentage" position="top" formatter={(v: number) => `${v.toFixed(1)}%`} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -531,27 +553,22 @@ const AmazonReviews = () => {
             <div>
               <div className="mb-2 w-40 flex flex-col gap-1">
                 <label className="text-xs font-medium text-foreground">Brand</label>
-                <Select value={selectedRatingBrand2} onValueChange={setSelectedRatingBrand2}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All</SelectItem>
-                    {distributionBrands.map(b => (
-                      <SelectItem key={b} value={b}>
-                        {b}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <MultiSelect
+                  options={distributionBrands}
+                  selected={selectedRatingBrands2}
+                  onChange={setSelectedRatingBrands2}
+                  placeholder="Select brands"
+                />
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ratingDistribution2}>
                     <XAxis dataKey="rating" />
                     <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} />
+                    <Tooltip content={<RatingDistributionTooltip />} />
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={20}>
+                      <LabelList dataKey="percentage" position="top" formatter={(v: number) => `${v.toFixed(1)}%`} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
