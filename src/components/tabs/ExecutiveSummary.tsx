@@ -39,6 +39,19 @@ interface ExecutiveSummaryProps {
 
 const COLORS = ["#EA899A", "#CBD5E1"];
 
+const formatNumber = (value: number): string => {
+  if (value >= 1_000_000_000) {
+    return `${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, "")}B`;
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  return `${value}`;
+};
+
 const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
@@ -92,6 +105,11 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
     return results;
   }, [filteredBrandData, selectedBrands]);
 
+  const maxSpend = useMemo(
+    () => Math.max(...spendByBrand.map((d) => d.focus + d.other), 0),
+    [spendByBrand]
+  );
+
   const postsByBrand = useMemo(() => {
     const combined = [
       ...(instagramDataRaw || []),
@@ -117,6 +135,11 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
     }
     return results;
   }, [instagramDataRaw, tiktokDataRaw, selectedCompanies]);
+
+  const maxPosts = useMemo(
+    () => Math.max(...postsByBrand.map((d) => d.focus + d.other), 0),
+    [postsByBrand]
+  );
 
   const companyOptions = useMemo(() => {
     return [
@@ -152,7 +175,7 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
     };
   };
 
-  const currencyTooltip = createTooltip((v) => `$${v.toLocaleString()}`);
+  const currencyTooltip = createTooltip((v) => `$${formatNumber(v)}`);
   const countTooltip = createTooltip((v) => v.toLocaleString());
 
   if (instagramLoading || tiktokLoading) {
@@ -206,7 +229,10 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={spendByBrand}>
               <XAxis dataKey="brand" />
-              <YAxis />
+              <YAxis
+                domain={[0, maxSpend]}
+                tickFormatter={(v) => `$${formatNumber(Number(v))}`}
+              />
               <Tooltip content={currencyTooltip} />
               <Legend />
               <Bar
@@ -214,12 +240,14 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
                 stackId="a"
                 fill={COLORS[0]}
                 name="Breast Pumps"
+                radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="other"
                 stackId="a"
                 fill={COLORS[1]}
                 name="Other"
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -240,7 +268,10 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={postsByBrand}>
               <XAxis dataKey="brand" />
-              <YAxis />
+              <YAxis
+                domain={[0, maxPosts]}
+                tickFormatter={(v) => formatNumber(Number(v))}
+              />
               <Tooltip content={countTooltip} />
               <Legend />
               <Bar
@@ -248,12 +279,14 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
                 stackId="a"
                 fill={COLORS[0]}
                 name="Breast Pump Posts"
+                radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="other"
                 stackId="a"
                 fill={COLORS[1]}
                 name="Other Posts"
+                radius={[4, 4, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
