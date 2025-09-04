@@ -4,6 +4,7 @@ import SpendImpressionsByBrand from "../dashboard/SpendImpressionsByBrand";
 import GeneralFigures from "../dashboard/GeneralFigures";
 import Timeline from "../dashboard/Timeline";
 import ConsolidatedInvestmentDistribution from "../dashboard/ConsolidatedInvestmentDistribution";
+import TopAds from "../dashboard/TopAds";
 
 interface DataRow {
   "month-year": string;
@@ -19,6 +20,9 @@ interface DataRow {
   impressions: number;
   "spend (usd)": number;
   focus_vs_other: string;
+  Text?: string;
+  "Link To Creative"?: string;
+  "Landing Page"?: string;
 }
 
 interface BrandManufacturerProps {
@@ -72,6 +76,9 @@ const BrandManufacturer = ({ data }: BrandManufacturerProps) => {
 
       {/* Investment Distribution Analysis */}
       <ConsolidatedInvestmentDistribution key="brand-manufacturer-investment" data={filteredData} tabId="brand-manufacturer" />
+
+      {/* Top Ads Section */}
+      <TopAds data={filteredData} />
     </div>
   );
 };
