@@ -10,6 +10,8 @@ interface AdData {
   "spend (usd)": number;
   Text?: string;
   "Link To Creative"?: string;
+  "Link To Post"?: string;
+  post_link?: string;
   "Landing Page"?: string;
 }
 
@@ -65,17 +67,20 @@ const TopAds = ({ data }: TopAdsProps) => {
                 </span>
               </div>
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300">
-                {ad["Link To Creative"] ? (
-                  <img
-                    src={ad["Link To Creative"]}
-                    alt={ad.Text || "Ad creative"}
-                    className="w-full h-48 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">No Creative</span>
-                  </div>
-                )}
+{(() => {
+                  const imageUrl = ad["Link To Post"] || ad.post_link || ad["Link To Creative"];
+                  return imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={ad.Text || "Ad creative"}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">No Creative</span>
+                    </div>
+                  );
+                })()}
                 <div className="p-3 bg-white">
                   <div className="mb-2">
                     <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">

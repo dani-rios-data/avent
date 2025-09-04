@@ -22,6 +22,8 @@ interface DataRow {
   focus_vs_other: string;
   Text?: string;
   "Link To Creative"?: string;
+  "Link To Post"?: string;
+  post_link?: string;
   "Landing Page"?: string;
 }
 
