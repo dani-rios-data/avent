@@ -63,10 +63,11 @@ const GeneralFigures = ({ data }: GeneralFiguresProps) => {
         />
 
         <MetricCard
-          title="Number of Ads"
+          title="Ads"
           value={metrics.totalAds}
           icon={Megaphone}
           color="#34d399"
+          type="number"
         />
 
         <MetricCard

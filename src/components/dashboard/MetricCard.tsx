@@ -16,7 +16,9 @@ const MetricCard = ({ title, value, icon: Icon, change, trend, className = "", t
   const formatValue = (val: string | number) => {
     if (typeof val === 'number') {
       let formattedValue = '';
-      if (val >= 1000000) {
+      if (title === 'Ads') {
+        formattedValue = val.toLocaleString();
+      } else if (val >= 1000000) {
         formattedValue = `${(val / 1000000).toFixed(1)}M`;
       } else if (val >= 1000) {
         formattedValue = `${(val / 1000).toFixed(1)}K`;
