@@ -172,7 +172,7 @@ const Dashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="bg-white rounded-2xl border border-border shadow-gentle p-6">
             <TabsContent value="executive-summary" className="mt-0">
-              <ExecutiveSummary brandData={brandDataAll} />
+              <ExecutiveSummary brandData={brandDataAll} dmeData={dmeDataAll} />
             </TabsContent>
             
             <TabsContent value="brand-manufacturer" className="mt-0">

@@ -35,6 +35,7 @@ interface SocialRow {
 
 interface ExecutiveSummaryProps {
   brandData: DataRow[];
+  dmeData: DataRow[];
 }
 
 const COLORS = ["#EA899A", "#CBD5E1"];
@@ -52,10 +53,11 @@ const formatNumber = (value: number): string => {
   return `${value}`;
 };
 
-const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
+const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
 
   const {
@@ -79,11 +81,27 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
     });
   }, [brandData, selectedYears, selectedMonths]);
 
+  const filteredDMEData = useMemo(() => {
+    return dmeData.filter((row) => {
+      const yearMatch =
+        selectedYears.length === 0 || selectedYears.includes(row.year);
+      const monthMatch =
+        selectedMonths.length === 0 || selectedMonths.includes(row["month-year"]);
+      return yearMatch && monthMatch;
+    });
+  }, [dmeData, selectedYears, selectedMonths]);
+
   const brandOptions = useMemo(() => {
     return [
       ...new Set(filteredBrandData.map((row) => row["brand root"]).filter(Boolean)),
     ].sort();
   }, [filteredBrandData]);
+
+  const dmeOptions = useMemo(() => {
+    return [
+      ...new Set(filteredDMEData.map((row) => row["brand root"]).filter(Boolean)),
+    ].sort();
+  }, [filteredDMEData]);
 
   const spendByBrand = useMemo(() => {
     const totals: Record<string, { focus: number; other: number }> = {};
@@ -110,13 +128,34 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
     [spendByBrand]
   );
 
-  const postsByBrand = useMemo(() => {
-    const combined = [
-      ...(instagramDataRaw || []),
-      ...(tiktokDataRaw || []),
-    ];
+  const spendByProvider = useMemo(() => {
     const totals: Record<string, { focus: number; other: number }> = {};
-    combined.forEach((row: SocialRow) => {
+    filteredDMEData.forEach((row) => {
+      const provider = row["brand root"];
+      const spend = row["spend (usd)"] || 0;
+      if (!totals[provider]) totals[provider] = { focus: 0, other: 0 };
+      if (row.focus_vs_other === "focus") totals[provider].focus += spend;
+      else totals[provider].other += spend;
+    });
+    let results = Object.entries(totals).map(([provider, values]) => ({
+      provider,
+      focus: values.focus,
+      other: values.other,
+    }));
+    if (selectedProviders.length > 0) {
+      results = results.filter((item) => selectedProviders.includes(item.provider));
+    }
+    return results;
+  }, [filteredDMEData, selectedProviders]);
+
+  const maxDmeSpend = useMemo(
+    () => Math.max(...spendByProvider.map((d) => d.focus + d.other), 0),
+    [spendByProvider]
+  );
+
+  const instagramPostsByBrand = useMemo(() => {
+    const totals: Record<string, { focus: number; other: number }> = {};
+    (instagramDataRaw || []).forEach((row: SocialRow) => {
       const brand = row.company;
       if (!brand) return;
       if (!totals[brand]) totals[brand] = { focus: 0, other: 0 };
@@ -129,37 +168,67 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
       other: values.other,
     }));
     if (selectedCompanies.length > 0) {
-      results = results.filter((item) =>
-        selectedCompanies.includes(item.brand)
-      );
+      results = results.filter((item) => selectedCompanies.includes(item.brand));
     }
     return results;
-  }, [instagramDataRaw, tiktokDataRaw, selectedCompanies]);
+  }, [instagramDataRaw, selectedCompanies]);
 
-  const maxPosts = useMemo(
-    () => Math.max(...postsByBrand.map((d) => d.focus + d.other), 0),
-    [postsByBrand]
+  const tiktokPostsByBrand = useMemo(() => {
+    const totals: Record<string, { focus: number; other: number }> = {};
+    (tiktokDataRaw || []).forEach((row: SocialRow) => {
+      const brand = row.company;
+      if (!brand) return;
+      if (!totals[brand]) totals[brand] = { focus: 0, other: 0 };
+      if (row.focus_vs_other === "focus") totals[brand].focus += 1;
+      else totals[brand].other += 1;
+    });
+    let results = Object.entries(totals).map(([brand, values]) => ({
+      brand,
+      focus: values.focus,
+      other: values.other,
+    }));
+    if (selectedCompanies.length > 0) {
+      results = results.filter((item) => selectedCompanies.includes(item.brand));
+    }
+    return results;
+  }, [tiktokDataRaw, selectedCompanies]);
+
+  const maxInstagramPosts = useMemo(
+    () => Math.max(...instagramPostsByBrand.map((d) => d.focus + d.other), 0),
+    [instagramPostsByBrand]
+  );
+
+  const maxTiktokPosts = useMemo(
+    () => Math.max(...tiktokPostsByBrand.map((d) => d.focus + d.other), 0),
+    [tiktokPostsByBrand]
   );
 
   const companyOptions = useMemo(() => {
-    return [
-      ...new Set(
-        postsByBrand.map((row) => row.brand).filter(Boolean)
-      ),
-    ].sort();
-  }, [postsByBrand]);
+    const set = new Set<string>();
+    (instagramDataRaw || []).forEach((row) => row.company && set.add(row.company));
+    (tiktokDataRaw || []).forEach((row) => row.company && set.add(row.company));
+    return Array.from(set).sort();
+  }, [instagramDataRaw, tiktokDataRaw]);
 
   const createTooltip = (formatter: (v: number) => string) => {
-    return ({ active, payload, label }: any) => {
+    return ({
+      active,
+      payload,
+      label,
+    }: {
+      active?: boolean;
+      payload?: { name: string; color: string; value: number }[];
+      label?: string;
+    }) => {
       if (active && payload && payload.length) {
         const total = payload.reduce(
-          (sum: number, entry: any) => sum + Number(entry.value),
+          (sum: number, entry) => sum + Number(entry.value),
           0
         );
         return (
           <div className="bg-white p-2 border rounded">
             <p className="font-medium">{label}</p>
-            {payload.map((entry: any) => (
+            {payload.map((entry) => (
               <p key={entry.name} style={{ color: entry.color }}>
                 {entry.name}: {formatter(Number(entry.value))} (
                 {((Number(entry.value) / total) * 100).toFixed(1)}%)
@@ -208,7 +277,7 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
       </div>
 
       <FilterBar
-        data={brandData}
+        data={[...brandData, ...dmeData]}
         selectedYears={selectedYears}
         selectedMonths={selectedMonths}
         onYearChange={setSelectedYears}
@@ -217,6 +286,8 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
 
       <section>
         <h2 className="text-lg font-semibold mb-4">Ad Spend Distribution</h2>
+
+        <h3 className="text-md font-medium mb-2">Brand Manufacturer</h3>
         <div className="max-w-sm mb-4">
           <MultiSelect
             options={brandOptions}
@@ -225,12 +296,49 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
             placeholder="All Brands"
           />
         </div>
-        <div className="h-80">
+        <div className="h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={spendByBrand}>
               <XAxis dataKey="brand" />
               <YAxis
                 domain={[0, maxSpend]}
+                tickFormatter={(v) => `$${formatNumber(Number(v))}`}
+              />
+              <Tooltip content={currencyTooltip} />
+              <Legend />
+              <Bar
+                dataKey="focus"
+                stackId="a"
+                fill={COLORS[0]}
+                name="Breast Pumps"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="other"
+                stackId="a"
+                fill={COLORS[1]}
+                name="Other"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <h3 className="text-md font-medium mb-2">DME Providers</h3>
+        <div className="max-w-sm mb-4">
+          <MultiSelect
+            options={dmeOptions}
+            selected={selectedProviders}
+            onChange={setSelectedProviders}
+            placeholder="All Providers"
+          />
+        </div>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={spendByProvider}>
+              <XAxis dataKey="provider" />
+              <YAxis
+                domain={[0, maxDmeSpend]}
                 tickFormatter={(v) => `$${formatNumber(Number(v))}`}
               />
               <Tooltip content={currencyTooltip} />
@@ -264,12 +372,43 @@ const ExecutiveSummary = ({ brandData }: ExecutiveSummaryProps) => {
             placeholder="All Companies"
           />
         </div>
-        <div className="h-80">
+
+        <h3 className="text-md font-medium mb-2">Instagram</h3>
+        <div className="h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={postsByBrand}>
+            <BarChart data={instagramPostsByBrand}>
               <XAxis dataKey="brand" />
               <YAxis
-                domain={[0, maxPosts]}
+                domain={[0, maxInstagramPosts]}
+                tickFormatter={(v) => formatNumber(Number(v))}
+              />
+              <Tooltip content={countTooltip} />
+              <Legend />
+              <Bar
+                dataKey="focus"
+                stackId="a"
+                fill={COLORS[0]}
+                name="Breast Pump Posts"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="other"
+                stackId="a"
+                fill={COLORS[1]}
+                name="Other Posts"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <h3 className="text-md font-medium mb-2">TikTok</h3>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={tiktokPostsByBrand}>
+              <XAxis dataKey="brand" />
+              <YAxis
+                domain={[0, maxTiktokPosts]}
                 tickFormatter={(v) => formatNumber(Number(v))}
               />
               <Tooltip content={countTooltip} />
