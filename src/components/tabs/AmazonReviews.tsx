@@ -1,7 +1,7 @@
-import { useMemo, Fragment, useState, useEffect } from "react";
+import { useMemo, Fragment, useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2, Store, Tag } from "lucide-react";
+import { AlertCircle, Loader2, Store, Tag, Star } from "lucide-react";
 import { useCSVData } from "@/hooks/useCSVData";
 import { MultiSelect } from "@/components/ui/multi-select";
 import {
@@ -16,7 +16,6 @@ import {
   Legend,
 } from "recharts";
 import type { TooltipProps } from "recharts";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatNumber } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +47,13 @@ interface ReviewRow {
   "Review Title": string;
   "Review Text": string;
   "Review Link": string;
+}
+
+interface RatingDistributionRow {
+  asin: string;
+  product_title: string;
+  rating: number;
+  count: number;
 }
 
 interface Product {
@@ -98,6 +104,29 @@ const PriceRatingTooltip = ({
         <div className="font-medium text-foreground">{product.brand}</div>
         <div className="mb-1 text-muted-foreground">{product.title}</div>
         <div className="font-semibold text-primary">{price}</div>
+        <div className="text-muted-foreground">
+          Rating: {product.starRating.toFixed(2)}
+        </div>
+        <div className="text-muted-foreground">
+          {formatNumber(product.numberOfRatings)} reviews
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const RatingDistributionTooltip = ({
+  active,
+  payload,
+}: TooltipProps<number, string>) => {
+  if (active && payload?.length) {
+    const data = payload[0].payload as { rating: number; count: number; percentage: number };
+    return (
+      <div className="rounded-lg border bg-background/80 backdrop-blur px-3 py-2 text-xs shadow-lg">
+        <div className="font-medium text-foreground">{data.rating} Stars</div>
+        <div className="text-muted-foreground">{formatNumber(data.count)} reviews</div>
+        <div className="text-muted-foreground">{data.percentage.toFixed(1)}%</div>
       </div>
     );
   }
@@ -107,12 +136,13 @@ const PriceRatingTooltip = ({
 const AmazonReviews = () => {
   const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/consolidated_products.csv");
   const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSVData<ReviewRow>("/consolidated_reviews.csv");
+  const { data: ratingDistributionRaw, loading: ratingDistLoading, error: ratingDistError } = useCSVData<RatingDistributionRow>("/amazon_rating_distribution.csv");
 
   const {
     products,
     brandStats,
-    ratingDistributionAll,
-    ratingDistributionAvent,
+    ratingDistributions,
+    distributionBrands,
     topProducts,
     priceDomain,
     priceTicks,
@@ -190,18 +220,25 @@ const AmazonReviews = () => {
       avgRating: s.totalRating / s.productCount,
     }));
 
-    const ratingCountsAll = [1, 2, 3, 4, 5].map(r => ({
-      rating: r,
-      count: reviews.filter(rv => Number(rv.Rating) === r).length,
-    }));
+    const asinToBrand = new Map<string, string>();
+    products.forEach(p => asinToBrand.set(p.asin, p.brand));
 
-    const aventReviews = products
-      .filter(p => p.brand.toLowerCase().includes("avent"))
-      .flatMap(p => p.reviews);
-    const ratingCountsAvent = [1, 2, 3, 4, 5].map(r => ({
-      rating: r,
-      count: aventReviews.filter(rv => Number(rv.Rating) === r).length,
-    }));
+    const ratingRows = (ratingDistributionRaw as RatingDistributionRow[]) || [];
+    const distributionMap: Record<string, { rating: number; count: number }[]> = {};
+    const allCounts = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: 0 }));
+    const brandSet = new Set<string>();
+    ratingRows.forEach(row => {
+      const brand = asinToBrand.get(row.asin) || "Unknown";
+      brandSet.add(brand);
+      if (!distributionMap[brand]) {
+        distributionMap[brand] = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: 0 }));
+      }
+      const idx = Math.max(0, Math.min(4, Number(row.rating) - 1));
+      distributionMap[brand][idx].count += Number(row.count);
+      allCounts[idx].count += Number(row.count);
+    });
+    distributionMap["All"] = allCounts;
+    const distributionBrands = Array.from(brandSet);
 
     const topProducts = [...products]
       .filter(p => p.reviewCount > 0)
@@ -222,13 +259,23 @@ const AmazonReviews = () => {
     return {
       products,
       brandStats,
-      ratingDistributionAll: ratingCountsAll,
-      ratingDistributionAvent: ratingCountsAvent,
+      ratingDistributions: distributionMap,
+      distributionBrands,
       topProducts,
       priceDomain: [niceMin, niceMax] as [number, number],
       priceTicks: ticks,
     };
-  }, [productRaw, reviewRaw]);
+  }, [productRaw, reviewRaw, ratingDistributionRaw]);
+
+  const topProductAsins = useMemo(
+    () => new Set(topProducts.map(p => p.asin)),
+    [topProducts],
+  );
+
+  const galleryProducts = useMemo(() => {
+    const others = products.filter(p => !topProductAsins.has(p.asin));
+    return [...topProducts, ...others].slice(0, 6);
+  }, [products, topProducts, topProductAsins]);
 
   const sortedBrandStats = useMemo(
     () => [...brandStats].sort((a, b) => b.totalReviews - a.totalReviews),
@@ -260,7 +307,52 @@ const AmazonReviews = () => {
     return Object.entries(map).map(([brand, items]) => ({ brand, items }));
   }, [products]);
 
-  if (productsLoading || reviewsLoading) {
+  const [selectedPriceBrands, setSelectedPriceBrands] = useState<string[]>([]);
+  useEffect(() => {
+    setSelectedPriceBrands(sortedBrandStats.slice(0, 8).map(b => b.brand));
+  }, [sortedBrandStats]);
+
+  const filteredProductsByBrand = useMemo(
+    () =>
+      productsByBrand.filter(({ brand }) =>
+        selectedPriceBrands.includes(brand)
+      ),
+    [productsByBrand, selectedPriceBrands]
+  );
+
+  const [selectedRatingBrands1, setSelectedRatingBrands1] = useState<string[]>([]);
+  const [selectedRatingBrands2, setSelectedRatingBrands2] = useState<string[]>([]);
+  useEffect(() => {
+    setSelectedRatingBrands1(distributionBrands);
+    const aventBrand = distributionBrands.find(b => b.toLowerCase().includes("avent"));
+    if (aventBrand) setSelectedRatingBrands2([aventBrand]);
+  }, [distributionBrands]);
+
+  const aggregateDistributions = useCallback(
+    (brands: string[]) => {
+      const counts = [1, 2, 3, 4, 5].map(r => ({ rating: r, count: 0 }));
+      brands.forEach(brand => {
+        (ratingDistributions[brand] || []).forEach(({ rating, count }) => {
+          const idx = Math.max(0, Math.min(4, rating - 1));
+          counts[idx].count += count;
+        });
+      });
+      const total = counts.reduce((sum, d) => sum + d.count, 0);
+      return counts.map(d => ({ ...d, percentage: total ? (d.count / total) * 100 : 0 }));
+    },
+    [ratingDistributions]
+  );
+
+  const ratingDistribution1 = useMemo(
+    () => aggregateDistributions(selectedRatingBrands1.length ? selectedRatingBrands1 : distributionBrands),
+    [selectedRatingBrands1, distributionBrands, aggregateDistributions]
+  );
+  const ratingDistribution2 = useMemo(
+    () => aggregateDistributions(selectedRatingBrands2.length ? selectedRatingBrands2 : distributionBrands),
+    [selectedRatingBrands2, distributionBrands, aggregateDistributions]
+  );
+
+  if (productsLoading || reviewsLoading || ratingDistLoading) {
     return (
       <div className="min-h-64 flex items-center justify-center">
         <Card className="p-8 bg-white shadow-gentle rounded-2xl">
@@ -273,13 +365,13 @@ const AmazonReviews = () => {
     );
   }
 
-  if (productsError || reviewsError) {
+  if (productsError || reviewsError || ratingDistError) {
     return (
       <div className="p-6">
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Error loading Amazon review data: {productsError || reviewsError}
+            Error loading Amazon review data: {productsError || reviewsError || ratingDistError}
           </AlertDescription>
         </Alert>
       </div>
@@ -371,6 +463,15 @@ const AmazonReviews = () => {
         <Card>
           <CardHeader>
             <CardTitle>Price vs. Rating</CardTitle>
+            <div className="w-72 mt-4 flex flex-col gap-1">
+              <label className="text-xs font-medium text-foreground">Brand</label>
+              <MultiSelect
+                options={sortedBrandStats.map(b => b.brand)}
+                selected={selectedPriceBrands}
+                onChange={setSelectedPriceBrands}
+                placeholder="Select brands"
+              />
+            </div>
           </CardHeader>
           <CardContent>
           <div className="h-72">
@@ -404,7 +505,7 @@ const AmazonReviews = () => {
                   iconSize={8}
                   wrapperStyle={{ fontSize: "0.75rem", paddingTop: 8 }}
                 />
-                {productsByBrand.map(({ brand, items }) => (
+                {filteredProductsByBrand.map(({ brand, items }) => (
                   <Scatter
                     key={brand}
                     data={items}
@@ -426,39 +527,43 @@ const AmazonReviews = () => {
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
-              <p className="mb-2 text-sm font-medium text-muted-foreground">
-                All Brands
-              </p>
+              <div className="my-4 w-40 flex flex-col gap-1">
+                <label className="text-xs font-medium text-foreground">Brand</label>
+                <MultiSelect
+                  options={distributionBrands}
+                  selected={selectedRatingBrands1}
+                  onChange={setSelectedRatingBrands1}
+                  placeholder="Select brands"
+                />
+              </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={ratingDistributionAll}>
-                    <XAxis dataKey="rating" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar
-                      dataKey="count"
-                      fill="#EA899A"
-                      radius={[8, 8, 0, 0]}
-                    />
+                  <BarChart data={ratingDistribution1}>
+                    <XAxis dataKey="rating" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip content={<RatingDistributionTooltip />} />
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
             <div>
-              <p className="mb-2 text-sm font-medium text-muted-foreground">
-                Avent
-              </p>
+              <div className="my-4 w-40 flex flex-col gap-1">
+                <label className="text-xs font-medium text-foreground">Brand</label>
+                <MultiSelect
+                  options={distributionBrands}
+                  selected={selectedRatingBrands2}
+                  onChange={setSelectedRatingBrands2}
+                  placeholder="Select brands"
+                />
+              </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={ratingDistributionAvent}>
-                    <XAxis dataKey="rating" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar
-                      dataKey="count"
-                      fill="#EA899A"
-                      radius={[8, 8, 0, 0]}
-                    />
+                  <BarChart data={ratingDistribution2}>
+                    <XAxis dataKey="rating" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip content={<RatingDistributionTooltip />} />
+                    <Bar dataKey="count" fill="#EA899A" radius={[8, 8, 0, 0]} barSize={30} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -469,45 +574,22 @@ const AmazonReviews = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Top Rated Products</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead className="text-right">Avg Rating</TableHead>
-                <TableHead className="text-right">Reviews</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topProducts.map(p => (
-                <TableRow key={p.asin}>
-                  <TableCell>{p.title}</TableCell>
-                  <TableCell>{p.brand}</TableCell>
-                  <TableCell className="text-right">{p.avgReviewRating?.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(p.reviewCount)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Product Gallery</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {products.slice(0, 6).map(p => (
+            {galleryProducts.map(p => (
               <Card key={p.asin} className="overflow-hidden">
                 <CardHeader className="p-0">
                   <img src={p.photo} alt={p.title} className="w-full h-60 object-cover" />
                 </CardHeader>
                 <CardContent className="p-4 space-y-2">
-                  <CardTitle className="text-sm line-clamp-2">{p.title}</CardTitle>
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-sm line-clamp-2">{p.title}</CardTitle>
+                    {topProductAsins.has(p.asin) && (
+                      <Star className="h-4 w-4 text-yellow-500 shrink-0" />
+                    )}
+                  </div>
                   <CardDescription>{p.brand}</CardDescription>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{p.currency} {p.price.toFixed(2)}</span>
@@ -524,7 +606,6 @@ const AmazonReviews = () => {
                     ⭐ {(p.avgReviewRating ?? p.starRating).toFixed(2)} ({formatNumber(p.reviewCount || p.numberOfRatings)})
                   </div>
                   <dl className="text-xs space-y-1">
-                    <div className="flex justify-between"><dt>ASIN</dt><dd>{p.asin}</dd></div>
                     <div className="flex justify-between"><dt>Currency</dt><dd>{p.currency}</dd></div>
                     <div className="flex justify-between"><dt>Country</dt><dd>{p.country}</dd></div>
                     {p.availability && (
