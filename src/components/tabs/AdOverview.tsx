@@ -34,7 +34,7 @@ interface SocialRow {
   focus_vs_other: string;
 }
 
-interface MarketingOverviewProps {
+interface AdOverviewProps {
   brandData: DataRow[];
   dmeData: DataRow[];
 }
@@ -54,7 +54,7 @@ const formatNumber = (value: number): string => {
   return `${value}`;
 };
 
-const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
+const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -227,15 +227,21 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
           0
         );
         return (
-          <div className="bg-white p-2 border rounded">
-            <p className="font-medium">{label}</p>
+          <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-md text-sm space-y-1">
+            <p className="font-semibold text-foreground">{label}</p>
             {payload.map((entry) => (
-              <p key={entry.name} style={{ color: entry.color }}>
-                {entry.name}: {formatter(Number(entry.value))} (
-                {((Number(entry.value) / total) * 100).toFixed(1)}%)
+              <p key={entry.name} className="flex items-center gap-2" style={{ color: entry.color }}>
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span>
+                  {entry.name}: {formatter(Number(entry.value))} (
+                  {((Number(entry.value) / total) * 100).toFixed(1)}%)
+                </span>
               </p>
             ))}
-            <p className="mt-1 font-medium">
+            <p className="pt-1 font-semibold text-foreground">
               Total: {formatter(total)}
             </p>
           </div>
@@ -304,7 +310,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
         </div>
         <div className="h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={spendByBrand}>
+            <BarChart data={spendByBrand} barCategoryGap={32}>
               <XAxis dataKey="brand" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxSpend]}
@@ -319,6 +325,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pumps"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
               <Bar
                 dataKey="other"
@@ -326,6 +333,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -344,7 +352,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
         </div>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={spendByProvider}>
+            <BarChart data={spendByProvider} barCategoryGap={32}>
               <XAxis dataKey="provider" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxDmeSpend]}
@@ -359,6 +367,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pumps"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
               <Bar
                 dataKey="other"
@@ -366,6 +375,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -391,7 +401,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
         </h3>
         <div className="h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={instagramPostsByBrand}>
+            <BarChart data={instagramPostsByBrand} barCategoryGap={32}>
               <XAxis dataKey="brand" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxInstagramPosts]}
@@ -406,6 +416,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pump Posts"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
               <Bar
                 dataKey="other"
@@ -413,6 +424,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other Posts"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -423,7 +435,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
         </h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={tiktokPostsByBrand}>
+            <BarChart data={tiktokPostsByBrand} barCategoryGap={32}>
               <XAxis dataKey="brand" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxTiktokPosts]}
@@ -438,6 +450,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pump Posts"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
               <Bar
                 dataKey="other"
@@ -445,6 +458,7 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other Posts"
                 radius={[4, 4, 0, 0]}
+                barSize={12}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -454,4 +468,4 @@ const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
   );
 };
 
-export default MarketingOverview;
+export default AdOverview;

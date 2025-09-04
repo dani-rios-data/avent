@@ -171,38 +171,37 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
       }
 
       return (
-        <div className="bg-white p-4 border border-gray-300 rounded-xl shadow-2xl max-w-xs" style={{ 
-          backgroundColor: '#ffffff', 
-          opacity: 1, 
-          zIndex: 99999 
-        }}>
+        <div
+          className="bg-white border border-gray-200 rounded-lg p-3 shadow-md text-sm max-w-xs"
+          style={{ backgroundColor: "#ffffff", opacity: 1, zIndex: 99999 }}
+        >
           <div className="space-y-2">
             <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
               <div className="font-semibold text-gray-800">{label}</div>
-              <div className="text-sm text-gray-600">•</div>
+              <div className="text-xs text-gray-600">•</div>
               <div className="font-medium text-gray-700">{brand}</div>
               {brand === "Avent" && (
                 <Heart className="w-4 h-4 text-teal-600 fill-teal-600" />
               )}
             </div>
-            
+
             <div className="space-y-1">
               <div className="flex items-baseline gap-2">
-                <span className="text-sm font-medium text-gray-600">Spend:</span>
-                <span className="font-semibold text-lg" style={{ color: hoveredEntry.color }}>
+                <span className="text-xs font-medium text-gray-600">Spend:</span>
+                <span className="font-semibold" style={{ color: hoveredEntry.color }}>
                   ${formatNumber(spend)}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500">
                   ({spendPercentage.toFixed(1)}%)
                 </span>
               </div>
-              
+
               <div className="flex items-baseline gap-2">
-                <span className="text-sm font-medium text-gray-600">Impressions:</span>
+                <span className="text-xs font-medium text-gray-600">Impressions:</span>
                 <span className="font-medium text-gray-700">
                   {formatNumber(impressions)}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500">
                   ({impressionsPercentage.toFixed(1)}%)
                 </span>
               </div>
@@ -277,7 +276,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
           </CardHeader>
           <CardContent className="overflow-visible">
             <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={spendChartData} barCategoryGap="5%" maxBarSize={40}>
+                <BarChart data={spendChartData} barCategoryGap="20%" maxBarSize={20}>
                 <XAxis 
                   dataKey="year" 
                   axisLine={false} 
@@ -314,6 +313,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
                       stroke={brand === "Avent" ? "hsl(173, 58%, 29%)" : "none"}
                       strokeWidth={brand === "Avent" ? 2 : 0}
                       radius={[6, 6, 0, 0]}
+                      barSize={12}
                     >
                       {brand === "Avent" && (
                         <LabelList 
