@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardHeader from "./dashboard/DashboardHeader";
 
-import MarketingOverview from "./tabs/MarketingOverview";
+import AdOverview from "./tabs/AdOverview";
 import BrandManufacturer from "./tabs/BrandManufacturer";
 import DMEProviders from "./tabs/DMEProviders";
 import SocialMedia from "./tabs/SocialMedia";
@@ -13,7 +13,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { parseISO, format } from "date-fns";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("marketing-overview");
+  const [activeTab, setActiveTab] = useState("ad-overview");
   
   const { data: brandDataRaw, loading: brandLoading, error: brandError } =
     useCSVData("/Pathmathics_Brand_Manufacturer_plus_focus.csv");
@@ -132,10 +132,10 @@ const Dashboard = () => {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="px-6 py-1">
               <TabsList className="grid w-full grid-cols-5 bg-transparent rounded-none border-none p-0 shadow-none">
                 <TabsTrigger
-                  value="marketing-overview"
+                  value="ad-overview"
                   className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-soft font-bold text-black transition-all text-sm"
                 >
-                  Marketing Overview
+                  Ad Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="brand-manufacturer" 
@@ -171,8 +171,8 @@ const Dashboard = () => {
       <div className="pt-40 container mx-auto p-6 max-w-7xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="bg-white rounded-2xl border border-border shadow-gentle p-6">
-            <TabsContent value="marketing-overview" className="mt-0">
-              <MarketingOverview brandData={brandDataAll} dmeData={dmeDataAll} />
+            <TabsContent value="ad-overview" className="mt-0">
+              <AdOverview brandData={brandDataAll} dmeData={dmeDataAll} />
             </TabsContent>
             
             <TabsContent value="brand-manufacturer" className="mt-0">

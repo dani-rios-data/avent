@@ -110,11 +110,10 @@ const Timeline = ({ data, title = "Brand" }: TimelineProps) => {
       const total = payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0);
       
       return (
-        <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-xl min-w-48" style={{ 
-          backgroundColor: '#ffffff', 
-          opacity: 1, 
-          zIndex: 99999 
-        }}>
+        <div
+          className="bg-white border border-gray-200 rounded-lg p-3 shadow-md text-sm min-w-48"
+          style={{ backgroundColor: "#ffffff", opacity: 1, zIndex: 99999 }}
+        >
           <div className="space-y-2">
             <div className="text-xs font-semibold text-gray-800 pb-1 border-b border-gray-100">
               {label}
