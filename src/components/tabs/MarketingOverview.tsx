@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { BarChart3, Share2 } from "lucide-react";
 
 interface DataRow {
   "month-year": string;
@@ -33,7 +34,7 @@ interface SocialRow {
   focus_vs_other: string;
 }
 
-interface ExecutiveSummaryProps {
+interface MarketingOverviewProps {
   brandData: DataRow[];
   dmeData: DataRow[];
 }
@@ -53,7 +54,7 @@ const formatNumber = (value: number): string => {
   return `${value}`;
 };
 
-const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
+const MarketingOverview = ({ brandData, dmeData }: MarketingOverviewProps) => {
   const [selectedYears, setSelectedYears] = useState<string[]>([]);
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -285,9 +286,14 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
       />
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Ad Spend Distribution</h2>
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-primary" />
+          Ad Spend Distribution
+        </h2>
 
-        <h3 className="text-md font-medium mb-2">Brand Manufacturer</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">
+          Brand Manufacturer
+        </h3>
         <div className="max-w-sm mb-4">
           <MultiSelect
             options={brandOptions}
@@ -299,9 +305,10 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
         <div className="h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={spendByBrand}>
-              <XAxis dataKey="brand" />
+              <XAxis dataKey="brand" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxSpend]}
+                tick={{ fill: "#4B5563", fontSize: 11 }}
                 tickFormatter={(v) => `$${formatNumber(Number(v))}`}
               />
               <Tooltip content={currencyTooltip} />
@@ -324,7 +331,9 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
           </ResponsiveContainer>
         </div>
 
-        <h3 className="text-md font-medium mb-2">DME Providers</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">
+          DME Providers
+        </h3>
         <div className="max-w-sm mb-4">
           <MultiSelect
             options={dmeOptions}
@@ -336,9 +345,10 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={spendByProvider}>
-              <XAxis dataKey="provider" />
+              <XAxis dataKey="provider" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxDmeSpend]}
+                tick={{ fill: "#4B5563", fontSize: 11 }}
                 tickFormatter={(v) => `$${formatNumber(Number(v))}`}
               />
               <Tooltip content={currencyTooltip} />
@@ -363,7 +373,10 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Focus in Social Media Posts</h2>
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Share2 className="w-5 h-5 text-primary" />
+          Focus in Social Media Posts
+        </h2>
         <div className="max-w-sm mb-4">
           <MultiSelect
             options={companyOptions}
@@ -373,13 +386,16 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
           />
         </div>
 
-        <h3 className="text-md font-medium mb-2">Instagram</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">
+          Instagram
+        </h3>
         <div className="h-80 mb-8">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={instagramPostsByBrand}>
-              <XAxis dataKey="brand" />
+              <XAxis dataKey="brand" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxInstagramPosts]}
+                tick={{ fill: "#4B5563", fontSize: 11 }}
                 tickFormatter={(v) => formatNumber(Number(v))}
               />
               <Tooltip content={countTooltip} />
@@ -402,13 +418,16 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
           </ResponsiveContainer>
         </div>
 
-        <h3 className="text-md font-medium mb-2">TikTok</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-2 uppercase">
+          TikTok
+        </h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={tiktokPostsByBrand}>
-              <XAxis dataKey="brand" />
+              <XAxis dataKey="brand" tick={{ fill: "#4B5563", fontSize: 11 }} />
               <YAxis
                 domain={[0, maxTiktokPosts]}
+                tick={{ fill: "#4B5563", fontSize: 11 }}
                 tickFormatter={(v) => formatNumber(Number(v))}
               />
               <Tooltip content={countTooltip} />
@@ -435,4 +454,4 @@ const ExecutiveSummary = ({ brandData, dmeData }: ExecutiveSummaryProps) => {
   );
 };
 
-export default ExecutiveSummary;
+export default MarketingOverview;
