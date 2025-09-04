@@ -122,11 +122,80 @@ const RatingDistributionTooltip = ({
 }: TooltipProps<number, string>) => {
   if (active && payload?.length) {
     const data = payload[0].payload as { rating: number; count: number; percentage: number };
+    
+    // Generate star display
+    const starDisplay = Array.from({ length: 5 }, (_, i) => (
+      i < data.rating ? "★" : "☆"
+    )).join("");
+    
+    // Color based on rating
+    const getRatingColor = (rating: number) => {
+      if (rating >= 4) return "text-green-600";
+      if (rating >= 3) return "text-yellow-600";
+      if (rating >= 2) return "text-orange-600";
+      return "text-red-600";
+    };
+    
+    const getPercentageColor = (percentage: number) => {
+      if (percentage >= 30) return "text-green-600 font-bold";
+      if (percentage >= 20) return "text-yellow-600 font-semibold";
+      if (percentage >= 10) return "text-orange-600 font-medium";
+      return "text-red-600 font-medium";
+    };
+
     return (
-      <div className="rounded-lg border bg-background/80 backdrop-blur px-3 py-2 text-xs shadow-lg">
-        <div className="font-medium text-foreground">{data.rating} Stars</div>
-        <div className="text-muted-foreground">{formatNumber(data.count)} reviews</div>
-        <div className="text-muted-foreground">{data.percentage.toFixed(1)}%</div>
+      <div className="rounded-xl border-2 bg-white shadow-xl backdrop-blur-sm px-4 py-3 text-sm max-w-xs">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`text-lg ${getRatingColor(data.rating)}`}>
+            {starDisplay}
+          </div>
+          <div className="font-bold text-gray-800">
+            {data.rating} {data.rating === 1 ? 'Star' : 'Stars'}
+          </div>
+        </div>
+        
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Reviews:</span>
+            <span className="font-semibold text-gray-900">
+              {formatNumber(data.count)}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Share:</span>
+            <span className={getPercentageColor(data.percentage)}>
+              {data.percentage.toFixed(1)}%
+            </span>
+          </div>
+          
+          {/* Visual percentage bar */}
+          <div className="mt-2">
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  data.percentage >= 30 ? 'bg-green-500' :
+                  data.percentage >= 20 ? 'bg-yellow-500' :
+                  data.percentage >= 10 ? 'bg-orange-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${Math.min(data.percentage, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Quality indicator */}
+        <div className="mt-2 text-xs text-center">
+          <span className={`px-2 py-1 rounded-full ${
+            data.rating >= 4 ? 'bg-green-100 text-green-800' :
+            data.rating >= 3 ? 'bg-yellow-100 text-yellow-800' :
+            data.rating >= 2 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {data.rating >= 4 ? 'Excellent' :
+             data.rating >= 3 ? 'Good' :
+             data.rating >= 2 ? 'Fair' : 'Poor'}
+          </span>
+        </div>
       </div>
     );
   }
@@ -320,6 +389,55 @@ const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSV
     [productsByBrand, selectedPriceBrands]
   );
 
+  // Calculate dynamic domains and ticks based on filtered data
+  const { dynamicPriceDomain, dynamicPriceTicks, dynamicRatingDomain, dynamicRatingTicks } = useMemo(() => {
+    const allFilteredProducts = filteredProductsByBrand.flatMap(({ items }) => items);
+    
+    if (allFilteredProducts.length === 0) {
+      return {
+        dynamicPriceDomain: [0, 100] as [number, number],
+        dynamicPriceTicks: [0, 20, 40, 60, 80, 100],
+        dynamicRatingDomain: [0, 5] as [number, number],
+        dynamicRatingTicks: [0, 1, 2, 3, 4, 5],
+      };
+    }
+
+    // Price domain calculation
+    const priceValues = allFilteredProducts.map(p => p.price);
+    const minPrice = Math.min(...priceValues);
+    const maxPrice = Math.max(...priceValues);
+    const priceRange = maxPrice - minPrice;
+    const pricePadding = Math.max(priceRange * 0.1, 5); // 10% padding or minimum $5
+    const niceMinPrice = Math.floor((minPrice - pricePadding) / 10) * 10;
+    const niceMaxPrice = Math.ceil((maxPrice + pricePadding) / 10) * 10;
+    const priceStep = Math.max(Math.ceil((niceMaxPrice - niceMinPrice) / 5 / 10) * 10, 10);
+    const priceTicks = Array.from(
+      { length: Math.floor((niceMaxPrice - niceMinPrice) / priceStep) + 1 },
+      (_, i) => niceMinPrice + i * priceStep,
+    );
+
+    // Rating domain calculation
+    const ratingValues = allFilteredProducts.map(p => p.starRating);
+    const minRating = Math.min(...ratingValues);
+    const maxRating = Math.max(...ratingValues);
+    const ratingRange = maxRating - minRating;
+    const ratingPadding = Math.max(ratingRange * 0.1, 0.2); // 10% padding or minimum 0.2
+    const niceMinRating = Math.max(0, Math.floor((minRating - ratingPadding) * 2) / 2); // Round to nearest 0.5
+    const niceMaxRating = Math.min(5, Math.ceil((maxRating + ratingPadding) * 2) / 2); // Round to nearest 0.5
+    const ratingStep = Math.max((niceMaxRating - niceMinRating) / 4, 0.5);
+    const ratingTicks = Array.from(
+      { length: Math.floor((niceMaxRating - niceMinRating) / ratingStep) + 1 },
+      (_, i) => Math.round((niceMinRating + i * ratingStep) * 2) / 2,
+    );
+
+    return {
+      dynamicPriceDomain: [niceMinPrice, niceMaxPrice] as [number, number],
+      dynamicPriceTicks: priceTicks,
+      dynamicRatingDomain: [niceMinRating, niceMaxRating] as [number, number],
+      dynamicRatingTicks: ratingTicks,
+    };
+  }, [filteredProductsByBrand]);
+
   const [selectedRatingBrands1, setSelectedRatingBrands1] = useState<string[]>([]);
   const [selectedRatingBrands2, setSelectedRatingBrands2] = useState<string[]>([]);
   useEffect(() => {
@@ -481,8 +599,8 @@ const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSV
                   type="number"
                   dataKey="price"
                   name="Price"
-                  domain={priceDomain}
-                  ticks={priceTicks}
+                  domain={dynamicPriceDomain}
+                  ticks={dynamicPriceTicks}
                   tickFormatter={v => `$${v}`}
                   tick={{ fontSize: 12 }}
                 />
@@ -490,8 +608,8 @@ const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSV
                   type="number"
                   dataKey="starRating"
                   name="Rating"
-                  domain={[0, 5]}
-                  ticks={[0, 1, 2, 3, 4, 5]}
+                  domain={dynamicRatingDomain}
+                  ticks={dynamicRatingTicks}
                   tick={{ fontSize: 12 }}
                 />
                 <Tooltip
