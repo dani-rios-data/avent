@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import MetricCard from "./MetricCard";
-import { DollarSign, BarChart3, Tags, Users } from "lucide-react";
+import { DollarSign, BarChart3, Tags, Users, Megaphone } from "lucide-react";
 
 interface DataRow {
   "month-year": string;
@@ -25,13 +25,15 @@ const GeneralFigures = ({ data }: GeneralFiguresProps) => {
   const metrics = useMemo(() => {
     const totalSpend = data.reduce((sum, row) => sum + row["spend (usd)"], 0);
     const totalImpressions = data.reduce((sum, row) => sum + row.impressions, 0);
-    
+    const totalAds = data.length;
+
     const uniqueBrands = new Set(data.map(row => row["brand root"])).size;
     const uniquePublishers = new Set(data.map(row => row.publisher)).size;
 
     return {
       totalSpend,
       totalImpressions,
+      totalAds,
       uniqueBrands,
       uniquePublishers
     };
@@ -59,7 +61,14 @@ const GeneralFigures = ({ data }: GeneralFiguresProps) => {
           icon={BarChart3}
           color="#4ecdc4"
         />
-        
+
+        <MetricCard
+          title="Number of Ads"
+          value={metrics.totalAds}
+          icon={Megaphone}
+          color="#34d399"
+        />
+
         <MetricCard
           title="Unique Brands"
           value={metrics.uniqueBrands}
