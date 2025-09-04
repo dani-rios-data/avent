@@ -14,8 +14,60 @@ import { Loader2, AlertCircle } from "lucide-react";
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("executive-summary");
   
-  const { data: brandData, loading: brandLoading, error: brandError } = useCSVData("/brand_manufacturer_clean.csv");
-  const { data: dmeData, loading: dmeLoading, error: dmeError } = useCSVData("/dme_provider_clean.csv");
+  const { data: brandDataRaw, loading: brandLoading, error: brandError } = useCSVData("/Pathmathics_Brand_Manufacturer_plus_focus.csv");
+  
+  // Filter data to only include breast pump related products (focus_vs_other = 'focus')
+  // and add required month-year and year columns
+  const brandData = brandDataRaw?.filter(row => row['focus_vs_other'] === 'focus').map(row => {
+    const lastSeenDate = new Date(row['Last Seen']);
+    const year = lastSeenDate.getFullYear().toString();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = monthNames[lastSeenDate.getMonth()];
+    const monthYear = `${monthName} ${year}`;
+    
+    return {
+      ...row,
+      'month-year': monthYear,
+      'year': year,
+      'advertiser': row['Advertiser'],
+      'brand root': row['Brand Root'],
+      'category level 2': row['Category Level 2'],
+      'category level 3': row['Category Level 3'],
+      'category level 8': row['Category Level 8'],
+      'channel': row['Channel'],
+      'placement': row['Placement'],
+      'publisher': row['Publisher'],
+      'impressions': parseInt(row['Impressions']) || 0,
+      'spend (usd)': parseFloat(row['Spend (USD)']) || 0
+    };
+  }) || [];
+  const { data: dmeDataRaw, loading: dmeLoading, error: dmeError } = useCSVData("/Pathmatics_DME_plus_focus.csv");
+  
+  // Filter data to only include breast pump related products (focus_vs_other = 'focus')
+  // and add required month-year and year columns
+  const dmeData = dmeDataRaw?.filter(row => row['focus_vs_other'] === 'focus').map(row => {
+    const lastSeenDate = new Date(row['Last Seen']);
+    const year = lastSeenDate.getFullYear().toString();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = monthNames[lastSeenDate.getMonth()];
+    const monthYear = `${monthName} ${year}`;
+    
+    return {
+      ...row,
+      'month-year': monthYear,
+      'year': year,
+      'advertiser': row['Advertiser'],
+      'brand root': row['Brand Root'],
+      'category level 2': row['Category Level 2'],
+      'category level 3': row['Category Level 3'],
+      'category level 8': row['Category Level 8'],
+      'channel': row['Channel'],
+      'placement': row['Placement'],
+      'publisher': row['Publisher'],
+      'impressions': parseInt(row['Impressions']) || 0,
+      'spend (usd)': parseFloat(row['Spend (USD)']) || 0
+    };
+  }) || [];
 
   if (brandLoading || dmeLoading) {
     return (

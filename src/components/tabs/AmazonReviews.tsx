@@ -134,8 +134,8 @@ const RatingDistributionTooltip = ({
 };
 
 const AmazonReviews = () => {
-  const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/consolidated_products.csv");
-  const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSVData<ReviewRow>("/consolidated_reviews.csv");
+  const { data: productRaw, loading: productsLoading, error: productsError } = useCSVData<ProductRow>("/amazon_products.csv");
+const { data: reviewRaw, loading: reviewsLoading, error: reviewsError } = useCSVData<ReviewRow>("/amazon_reviews.csv");
   const { data: ratingDistributionRaw, loading: ratingDistLoading, error: ratingDistError } = useCSVData<RatingDistributionRow>("/amazon_rating_distribution.csv");
 
   const {

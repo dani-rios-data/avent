@@ -61,6 +61,7 @@ interface InstagramDataRow {
   engagement_rate_by_estimated_impression: number;
   post_tag_ugc: number;
   post_tag_contests: number;
+  focus_vs_other: string;
 }
 
 interface TikTokDataRow {
@@ -90,6 +91,7 @@ interface TikTokDataRow {
   views: number;
   post_tag_ugc: number;
   post_tag_contests: number;
+  focus_vs_other: string;
 }
 
 const SocialMedia = () => {
@@ -98,16 +100,22 @@ const SocialMedia = () => {
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
   
   const { 
-    data: instagramData, 
+    data: instagramDataRaw, 
     loading: instagramLoading, 
     error: instagramError 
-  } = useCSVData("/SM_IG_Breast_Pump_Brands.csv");
+  } = useCSVData("/SM_IG_Breast_Pump_Brands_plus_focus.csv");
+  
+  // Filter Instagram data to only include breast pump related posts (focus_vs_other = 'focus')
+  const instagramData = instagramDataRaw?.filter(row => row['focus_vs_other'] === 'focus') || [];
   
   const { 
-    data: tiktokData, 
+    data: tiktokDataRaw, 
     loading: tiktokLoading, 
     error: tiktokError 
-  } = useCSVData("/SM_TikTok_Breast_Pump_Brands.csv");
+  } = useCSVData("/SM_TikTok_Breast_Pump_Brands_plus_focus.csv");
+  
+  // Filter TikTok data to only include breast pump related posts (focus_vs_other = 'focus')
+  const tiktokData = tiktokDataRaw?.filter(row => row['focus_vs_other'] === 'focus') || [];
 
   const { years, months } = useMemo(() => {
     const igData = (instagramData as InstagramDataRow[]) || [];

@@ -18,6 +18,7 @@ interface DataRow {
   publisher: string;
   impressions: number;
   "spend (usd)": number;
+  focus_vs_other: string;
 }
 
 interface BrandManufacturerProps {
