@@ -95,8 +95,8 @@ const TopAds = ({ data }: TopAdsProps) => {
                       </span>
                     </div>
                     <div className="flex items-center gap-1 text-xs">
-                      <BarChart3 className="w-3 h-3 text-[#EA899A]" />
-                      <span className="text-[#EA899A] font-medium">
+                      <BarChart3 className="w-3 h-3 text-green-600" />
+                      <span className="text-green-600 font-medium">
                         ${formatNumber(ad["spend (usd)"])}
                       </span>
                     </div>
