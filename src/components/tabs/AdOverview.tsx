@@ -325,7 +325,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pumps"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
               <Bar
                 dataKey="other"
@@ -333,7 +333,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -367,7 +367,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pumps"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
               <Bar
                 dataKey="other"
@@ -375,7 +375,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -416,7 +416,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pump Posts"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
               <Bar
                 dataKey="other"
@@ -424,7 +424,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other Posts"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
             </BarChart>
           </ResponsiveContainer>
@@ -450,7 +450,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[0]}
                 name="Breast Pump Posts"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
               <Bar
                 dataKey="other"
@@ -458,7 +458,7 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
                 fill={COLORS[1]}
                 name="Other Posts"
                 radius={[4, 4, 0, 0]}
-                barSize={16}
+                barSize={20}
               />
             </BarChart>
           </ResponsiveContainer>
