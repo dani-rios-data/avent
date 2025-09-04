@@ -15,14 +15,13 @@ import { parseISO, format } from "date-fns";
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("executive-summary");
   
-  const { data: brandDataRaw, loading: brandLoading, error: brandError } = useCSVData("/Pathmathics_Brand_Manufacturer_plus_focus.csv");
-  
-  // Filter data to only include breast pump related products (focus_vs_other = 'focus')
-  // and add required month-year and year columns derived from Last Seen
-  const brandData =
+  const { data: brandDataRaw, loading: brandLoading, error: brandError } =
+    useCSVData("/Pathmathics_Brand_Manufacturer_plus_focus.csv");
+
+  // Parse all brand data and add derived fields
+  const brandDataAll =
     brandDataRaw
-      ?.filter((row) => row["focus_vs_other"] === "focus")
-      .map((row) => {
+      ?.map((row) => {
         const dateStr = row["Last Seen"];
         const lastSeenDate = parseISO(String(dateStr));
         if (isNaN(lastSeenDate.getTime())) return null;
@@ -43,17 +42,23 @@ const Dashboard = () => {
           publisher: row["Publisher"],
           impressions: parseInt(row["Impressions"]) || 0,
           "spend (usd)": parseFloat(row["Spend (USD)"]) || 0,
+          focus_vs_other: row["focus_vs_other"],
         };
       })
       .filter(Boolean) || [];
-  const { data: dmeDataRaw, loading: dmeLoading, error: dmeError } = useCSVData("/Pathmatics_DME_plus_focus.csv");
-  
+
   // Filter data to only include breast pump related products (focus_vs_other = 'focus')
-  // and add required month-year and year columns derived from Last Seen
-  const dmeData =
+  const brandData = brandDataAll.filter(
+    (row) => row["focus_vs_other"] === "focus"
+  );
+  const { data: dmeDataRaw, loading: dmeLoading, error: dmeError } = useCSVData(
+    "/Pathmatics_DME_plus_focus.csv"
+  );
+
+  // Parse all DME data and add derived fields
+  const dmeDataAll =
     dmeDataRaw
-      ?.filter((row) => row["focus_vs_other"] === "focus")
-      .map((row) => {
+      ?.map((row) => {
         const dateStr = row["Last Seen"];
         const lastSeenDate = parseISO(String(dateStr));
         if (isNaN(lastSeenDate.getTime())) return null;
@@ -74,9 +79,13 @@ const Dashboard = () => {
           publisher: row["Publisher"],
           impressions: parseInt(row["Impressions"]) || 0,
           "spend (usd)": parseFloat(row["Spend (USD)"]) || 0,
+          focus_vs_other: row["focus_vs_other"],
         };
       })
       .filter(Boolean) || [];
+
+  // Filter data to only include breast pump related products
+  const dmeData = dmeDataAll.filter((row) => row["focus_vs_other"] === "focus");
 
   if (brandLoading || dmeLoading) {
     return (
@@ -163,7 +172,7 @@ const Dashboard = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="bg-white rounded-2xl border border-border shadow-gentle p-6">
             <TabsContent value="executive-summary" className="mt-0">
-              <ExecutiveSummary brandData={brandData} dmeData={dmeData} />
+              <ExecutiveSummary brandData={brandDataAll} />
             </TabsContent>
             
             <TabsContent value="brand-manufacturer" className="mt-0">
