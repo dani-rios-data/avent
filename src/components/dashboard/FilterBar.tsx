@@ -18,16 +18,19 @@ const FilterBar = ({
   onMonthChange
 }: FilterBarProps) => {
   const { years, availableMonths } = useMemo(() => {
-    const years = [...new Set(data.map(row => row.year))].sort().reverse(); // Newest first
-    
+    const years = [...new Set(data.map(row => row.year).filter(Boolean))]
+      .sort()
+      .reverse(); // Newest first
+
     // Filter months based on selected years
-    const filteredData = selectedYears.length > 0 
-      ? data.filter(row => selectedYears.includes(row.year))
-      : data;
-    
-    const availableMonths = [...new Set(filteredData.map(row => row["month-year"]))]
+    const filteredData =
+      selectedYears.length > 0
+        ? data.filter((row) => selectedYears.includes(row.year))
+        : data;
+
+    const availableMonths = [...new Set(filteredData.map(row => row["month-year"]).filter(Boolean))]
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()); // Newest first
-    
+
     return { years, availableMonths };
   }, [data, selectedYears]);
 
