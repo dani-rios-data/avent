@@ -135,7 +135,7 @@ const Dashboard = () => {
                   value="ad-overview"
                   className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-soft font-bold text-black transition-all text-sm"
                 >
-                  Ad Overview
+                  Ads & Posts Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="brand-manufacturer" 
