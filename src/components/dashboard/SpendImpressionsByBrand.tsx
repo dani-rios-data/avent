@@ -276,7 +276,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
           </CardHeader>
           <CardContent className="overflow-visible">
             <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={spendChartData} barCategoryGap="20%" maxBarSize={20}>
+                <BarChart data={spendChartData} barCategoryGap="20%" maxBarSize={40}>
                 <XAxis 
                   dataKey="year" 
                   axisLine={false} 
@@ -313,7 +313,7 @@ const SpendImpressionsByBrand = ({ data, title = "Brand" }: SpendImpressionsByBr
                       stroke={brand === "Avent" ? "hsl(173, 58%, 29%)" : "none"}
                       strokeWidth={brand === "Avent" ? 2 : 0}
                       radius={[6, 6, 0, 0]}
-                      barSize={12}
+                      barSize={24}
                     >
                       {brand === "Avent" && (
                         <LabelList 
