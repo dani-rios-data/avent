@@ -1475,6 +1475,12 @@ const SocialMedia = () => {
         </p>
       </div>
 
+      <div className="bg-amber-50 border border-amber-200 rounded-lg py-2 px-4 mb-6 w-full">
+        <p className="text-sm text-amber-800 font-medium text-center">
+          This view only includes data related to breast pump products
+        </p>
+      </div>
+
       <div className="bg-warm-cream border-border shadow-soft rounded-2xl p-4">
         <div className="flex flex-wrap gap-4 items-start">
           <div className="flex flex-col gap-1 min-w-[200px]">

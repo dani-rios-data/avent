@@ -52,6 +52,13 @@ const BrandManufacturer = ({ data }: BrandManufacturerProps) => {
         </p>
       </div>
 
+      {/* Breast Pump Data Notice */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <p className="text-sm text-amber-800 font-medium">
+          This view only includes data related to breast pump products
+        </p>
+      </div>
+
       {/* Filter Bar */}
       <FilterBar
         data={data}
