@@ -121,6 +121,9 @@ const AdOverview = ({ brandData, dmeData }: AdOverviewProps) => {
     if (selectedBrands.length > 0) {
       results = results.filter((item) => selectedBrands.includes(item.brand));
     }
+    results.sort(
+      (a, b) => b.focus + b.other - (a.focus + a.other)
+    );
     return results;
   }, [filteredBrandData, selectedBrands]);
 
