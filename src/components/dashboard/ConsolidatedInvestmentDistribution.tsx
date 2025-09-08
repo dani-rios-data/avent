@@ -44,6 +44,42 @@ const CHART_COLORS = [
   "#DBEAFE",
 ];
 
+const RADIAN = Math.PI / 180;
+interface LabelProps {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  percent: number;
+}
+
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+}: LabelProps) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      className="text-xs"
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
 const StableDonutChart: React.FC<{ chartData: ChartDataItem[]; chartId: string }> = ({ chartData, chartId }) => {
   if (chartData.length === 0) {
     return (
@@ -65,6 +101,8 @@ const StableDonutChart: React.FC<{ chartData: ChartDataItem[]; chartId: string }
             outerRadius={100}
             paddingAngle={2}
             dataKey="value"
+            labelLine={false}
+            label={renderCustomizedLabel}
           >
             {chartData.map((entry, index) => (
               <Cell
@@ -74,8 +112,10 @@ const StableDonutChart: React.FC<{ chartData: ChartDataItem[]; chartId: string }
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number, name: string) => [
-              `$${formatNumber(value * 1000000)}`,
+            formatter={(value: number, name: string, entry) => [
+              `$${formatNumber(value * 1000000)} (${(
+                entry.payload.percent * 100
+              ).toFixed(1)}%)`,
               name,
             ]}
             labelFormatter={(label) => `${label}`}
