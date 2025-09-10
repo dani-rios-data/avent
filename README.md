@@ -1,73 +1,76 @@
-# Welcome to your Lovable project
+# Avent Marketing Dashboard
 
-## Project info
+Avent Marketing Dashboard is a modern web application for exploring advertising, social media, and e-commerce metrics. Built with React and Vite, it offers a fast developer experience and a clean, responsive interface.
 
-**URL**: https://lovable.dev/projects/0eb1f928-28fb-499e-8508-827cbaf0e0bb
+## Features
+- Multi-tab dashboard covering Ads & Posts Overview, Brand Manufacturer, DME Providers, Social Media, and Amazon Reviews
+- Data loading from CSV files with derived metrics and interactive visualizations
+- Client-side caching and asynchronous data fetching powered by React Query
+- Responsive design and accessible components using Tailwind CSS and shadcn/ui (Radix UI)
+- Routing with React Router and rich charts via Recharts
 
-## How can I edit this code?
+## Tech Stack
+- **Framework:** React 18, React Router, React Query
+- **Language:** TypeScript
+- **Build Tool:** Vite
+- **UI & Styling:** Tailwind CSS, shadcn/ui, Radix UI, lucide-react icons
+- **Data & Validation:** Recharts, React Hook Form, Zod, date-fns
+- **Package Manager:** npm
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/0eb1f928-28fb-499e-8508-827cbaf0e0bb) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## Project Structure
+```
+.
+├── public/               # Static assets
+├── src/
+│   ├── components/       # Reusable UI components and dashboard tabs
+│   ├── hooks/            # Custom hooks including CSV data loading
+│   ├── pages/            # Route components
+│   ├── assets/           # Images and other asset files
+│   └── main.tsx          # Application entry point
+├── package.json          # Project metadata and scripts
+├── vite.config.ts        # Vite configuration
+└── tailwind.config.ts    # Tailwind configuration
 ```
 
-**Edit a file directly in GitHub**
+## Getting Started
+### Prerequisites
+- Node.js 18+ and npm
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Installation
+```bash
+git clone <repository-url>
+cd avent
+npm install
+```
 
-**Use GitHub Codespaces**
+### Development
+```bash
+npm run dev
+```
+Serves the app with hot module replacement.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Build
+```bash
+npm run build
+```
+Generates an optimized production bundle in `dist/`.
 
-## What technologies are used for this project?
+### Preview
+```bash
+npm run preview
+```
+Serves the production build locally.
 
-This project is built with:
+## Scripts
+- `npm run dev` – start a development server
+- `npm run build` – create a production build
+- `npm run build:dev` – development-mode build
+- `npm run lint` – run ESLint
+- `npm run preview` – preview the production build
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Data Processing
+Python utilities (`check_dates.py`, `filter_csv_files.py`) assist with preparing CSV datasets consumed by the dashboard.
 
-## How can I deploy this project?
+## Contributing
+Pull requests are welcome. Please open an issue to discuss major changes before submitting.
 
-Simply open [Lovable](https://lovable.dev/projects/0eb1f928-28fb-499e-8508-827cbaf0e0bb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
