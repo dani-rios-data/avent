@@ -9,7 +9,7 @@ const DashboardHeader = () => {
         </div>
         <div>
           <h1 className="text-3xl font-display font-bold text-foreground tracking-tight">
-            Philips Avent Breastfeeding
+            Breastfeeding Pumps Market Analytics
           </h1>
           <p className="text-base text-muted-foreground font-light mt-1">
             Competitive Analysis
